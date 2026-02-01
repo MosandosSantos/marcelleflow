@@ -1,0 +1,440 @@
+{% extends 'base/base.html' %}
+{% block title %}Clientes - EsferaFlow{% endblock %}
+{% block page_title %}Clientes{% endblock %}
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+  <h2 class="text-2xl font-bold text-gray-800">Todos os clientes</h2>
+  <a
+    href="{% url 'clients:create' %}"
+    class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+  >
+    <i class="fas fa-plus mr-2"></i>Novo cliente
+  </a>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600 uppercase font-semibold">Total de clientes</p>
+        <p class="text-3xl font-bold text-gray-800 mt-2">{{ clients_total }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+        <i class="fas fa-users text-2xl text-blue-600"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600 uppercase font-semibold">Clientes com O.S. abertas</p>
+        <p class="text-3xl font-bold text-gray-800 mt-2">{{ clients_with_open_orders }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+        <i class="fas fa-tools text-2xl text-purple-600"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm text-gray-600 uppercase font-semibold">Clientes sem O.S. há 6 meses</p>
+        <p class="text-3xl font-bold text-gray-800 mt-2">{{ clients_without_orders_6m }}</p>
+      </div>
+      <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+        <i class="fas fa-calendar-times text-2xl text-green-600"></i>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Busca -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+  <form method="GET" class="flex gap-4">
+    <div class="flex-1">
+      <input
+        type="text"
+        name="search"
+        value="{{ request.GET.search }}"
+        placeholder="Buscar por nome, e-mail, CPF/CNPJ ou telefone..."
+        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+      />
+    </div>
+    <button
+      type="submit"
+      class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+    >
+      <i class="fas fa-search mr-2"></i>Buscar
+    </button>
+    {% if request.GET.search %}
+    <a
+      href="{% url 'clients:list' %}"
+      class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+    >
+      <i class="fas fa-times mr-2"></i>Limpar
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+<!-- Tabela -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+  {% if clients %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            Nome
+          </th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            Endereço
+          </th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            Cidade/UF
+          </th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            O.S. abertas
+          </th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            O.S. no ano
+          </th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            Ticket médio
+          </th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">
+            Última O.S.
+          </th>
+          <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">
+            Ações
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+        <tr class="border-t hover:bg-gray-50 transition-colors">
+          <td class="py-4 px-6">
+            <a
+              href="{% url 'clients:detail' client.id %}"
+              class="text-primary font-semibold hover:underline"
+            >
+              {{ client.full_name }}
+            </a>
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-700">
+            {{ client.street }}-{{ client.number }}/{{ client.complement }}
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-700">
+            {{ client.city }}/{{ client.state }}
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ client.open_orders }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ client.orders_year }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">
+            R$ {{ client.ticket_medio|floatformat:2 }}
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-600">
+            {% if client.last_order %}
+              {{ client.last_order|date:"d/m/Y" }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="py-4 px-6">
+            <div class="flex items-center justify-center gap-2">
+              <a
+                href="https://wa.me/55{{ client.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}"
+                target="_blank"
+                class="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                title="Abrir WhatsApp"
+              >
+                <i class="fab fa-whatsapp text-lg"></i>
+              </a>
+
+              <a
+                href="{% url 'clients:history' client.id %}"
+                class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                title="Ver histórico de ordens"
+              >
+                <i class="fas fa-history text-lg"></i>
+              </a>
+
+              <a
+                href="{% url 'clients:detail' client.id %}"
+                class="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                title="Ver detalhes"
+              >
+                <i class="fas fa-eye text-lg"></i>
+              </a>
+
+              <a
+                href="{% url 'clients:edit' client.id %}"
+                class="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                title="Editar cliente"
+              >
+                <i class="fas fa-edit text-lg"></i>
+              </a>
+
+              <a
+                href="{% url 'clients:delete' client.id %}"
+                class="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                title="Excluir cliente"
+              >
+                <i class="fas fa-trash-alt text-lg"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+  <div class="px-6 py-4 border-t flex justify-between items-center">
+    <span class="text-sm text-gray-600">
+      Mostrando {{ clients|length }} de {{ page_obj.paginator.count }} clientes
+      (Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})
+    </span>
+    <div class="space-x-2">
+      {% if page_obj.has_previous %}
+      <a
+        href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+      >
+        <i class="fas fa-angle-double-left"></i>
+      </a>
+      <a
+        href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+      >
+        <i class="fas fa-angle-left"></i> Anterior
+      </a>
+      {% endif %}
+
+      <span class="px-4 py-2 bg-primary text-white rounded">
+        {{ page_obj.number }}
+      </span>
+
+      {% if page_obj.has_next %}
+      <a
+        href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+      >
+        Próxima <i class="fas fa-angle-right"></i>
+      </a>
+      <a
+        href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}"
+        class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+      >
+        <i class="fas fa-angle-double-right"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="text-center py-12 text-gray-500">
+    <i class="fas fa-users text-5xl mb-4"></i>
+    <p class="text-lg font-semibold mb-2">Nenhum cliente encontrado</p>
+    {% if request.GET.search %}
+    <p class="text-sm">
+      Tente buscar com outros termos ou
+      <a href="{% url 'clients:list' %}" class="text-primary hover:underline"
+        >limpe os filtros</a
+      >.
+    </p>
+    {% else %}
+    <p class="text-sm">Comece cadastrando o primeiro cliente!</p>
+    <a
+      href="{% url 'clients:create' %}"
+      class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+    >
+      <i class="fas fa-plus mr-2"></i>Cadastrar cliente
+    </a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mt-6 mb-6">
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800">Top 10 clientes por quantidade de O.S.</h3>
+        <p class="text-sm text-gray-500">Clientes com maior volume de ordens</p>
+      </div>
+      <span class="text-xs text-gray-500">Últimos registros</span>
+    </div>
+    <div class="h-56">
+      <canvas id="clientsTopOrdersChart"></canvas>
+    </div>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-md p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-lg font-semibold text-gray-800">Top 10 clientes por faturamento</h3>
+        <p class="text-sm text-gray-500">Somatório de valores das O.S.</p>
+      </div>
+      <span class="text-xs text-gray-500">Últimos registros</span>
+    </div>
+    <div class="h-56">
+      <canvas id="clientsTopRevenueChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <h3 class="text-lg font-semibold text-gray-800">Entrada de novos clientes (últimos 10 meses)</h3>
+      <p class="text-sm text-gray-500">Evolução mensal de cadastros</p>
+    </div>
+  </div>
+  <div class="h-72">
+    <canvas id="clientsNewChart"></canvas>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ chart_top_count_labels|json_script:"chart-top-count-labels" }}
+{{ chart_top_count_values|json_script:"chart-top-count-values" }}
+{{ chart_top_revenue_labels|json_script:"chart-top-revenue-labels" }}
+{{ chart_top_revenue_values|json_script:"chart-top-revenue-values" }}
+{{ chart_new_clients_labels|json_script:"chart-new-clients-labels" }}
+{{ chart_new_clients_values|json_script:"chart-new-clients-values" }}
+<script>
+  const topCountLabels = JSON.parse(document.getElementById("chart-top-count-labels").textContent);
+  const topCountValues = JSON.parse(document.getElementById("chart-top-count-values").textContent);
+  const topRevenueLabels = JSON.parse(document.getElementById("chart-top-revenue-labels").textContent);
+  const topRevenueValues = JSON.parse(document.getElementById("chart-top-revenue-values").textContent);
+  const newClientsLabels = JSON.parse(document.getElementById("chart-new-clients-labels").textContent);
+  const newClientsValues = JSON.parse(document.getElementById("chart-new-clients-values").textContent);
+
+  const countCanvas = document.getElementById("clientsTopOrdersChart");
+  if (countCanvas) {
+    const countCtx = countCanvas.getContext("2d");
+    const countGradient = countCtx.createLinearGradient(0, 0, 0, 280);
+    countGradient.addColorStop(0, "rgba(59, 130, 246, 0.9)");
+    countGradient.addColorStop(1, "rgba(14, 116, 144, 0.6)");
+
+    new Chart(countCtx, {
+      type: "bar",
+      data: {
+        labels: topCountLabels,
+        datasets: [{
+          label: "O.S.",
+          data: topCountValues,
+          backgroundColor: countGradient,
+          borderColor: "rgba(37, 99, 235, 0.9)",
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#6B7280" }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#6B7280" },
+            grid: { color: "rgba(148, 163, 184, 0.2)" }
+          }
+        }
+      }
+    });
+  }
+
+  const revenueCanvas = document.getElementById("clientsTopRevenueChart");
+  if (revenueCanvas) {
+    const revenueCtx = revenueCanvas.getContext("2d");
+    const revenueGradient = revenueCtx.createLinearGradient(0, 0, 0, 280);
+    revenueGradient.addColorStop(0, "rgba(16, 185, 129, 0.9)");
+    revenueGradient.addColorStop(1, "rgba(5, 150, 105, 0.55)");
+
+    new Chart(revenueCtx, {
+      type: "bar",
+      data: {
+        labels: topRevenueLabels,
+        datasets: [{
+          label: "Faturamento (R$)",
+          data: topRevenueValues,
+          backgroundColor: revenueGradient,
+          borderColor: "rgba(5, 150, 105, 0.9)",
+          borderWidth: 1,
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => `R$ ${ctx.parsed.y.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#6B7280" }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#6B7280" },
+            grid: { color: "rgba(148, 163, 184, 0.2)" }
+          }
+        }
+      }
+    });
+  }
+
+  const newCtx = document.getElementById("clientsNewChart");
+  if (newCtx) {
+    new Chart(newCtx, {
+      type: "line",
+      data: {
+        labels: newClientsLabels,
+        datasets: [{
+          label: "Novos clientes",
+          data: newClientsValues,
+          borderColor: "rgba(139, 92, 246, 1)",
+          backgroundColor: "rgba(139, 92, 246, 0.15)",
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: "rgba(139, 92, 246, 1)"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: {
+            ticks: { color: "#6B7280" }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#6B7280" },
+            grid: { color: "rgba(148, 163, 184, 0.2)" }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

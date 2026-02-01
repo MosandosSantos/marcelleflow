@@ -1,0 +1,48 @@
+{% extends 'base/base.html' %}
+{% block title %}Faturamento - NF fechadas{% endblock %}
+{% block page_title %}Faturamento{% endblock %}
+
+{% block content %}
+{% include 'finance/partials/billing_header.html' %}
+{% include 'finance/partials/billing_tabs.html' %}
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+  <div class="px-6 py-4 border-b">
+    <h3 class="text-lg font-semibold text-gray-800">NF fechadas</h3>
+    <p class="text-sm text-gray-500">Notas fiscais pagas.</p>
+  </div>
+  {% if installments %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Numero</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Cliente</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">OS</th>
+          <th class="text-right py-4 px-6 text-sm font-semibold text-gray-700">Valor</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Pagamento</th>
+          <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for nf in installments %}
+        <tr class="border-t hover:bg-gray-50 transition-colors">
+          <td class="py-4 px-6 text-sm text-gray-700">{{ nf.invoice_number|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ nf.work_order.client.full_name|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ nf.work_order.code }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700 text-right">R$ {{ nf.valor|floatformat:2 }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ nf.data_pagamento|date:"d/m/Y" }}</td>
+          <td class="py-4 px-6 text-center text-sm text-gray-700">{{ nf.get_status_display }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-10 text-gray-500">
+    <i class="fas fa-check-circle text-4xl mb-3"></i>
+    <p class="text-sm">Nenhuma NF fechada.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

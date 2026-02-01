@@ -1,0 +1,174 @@
+{% extends 'base/base.html' %}
+{% block title %}Prestadores: {{ service_type.name }} - EsferaFlow{% endblock %}
+{% block page_title %}Prestadores por Tipo de Serviço{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Prestadores que Oferecem</h2>
+        <p class="text-gray-600 mt-1">
+            <span class="font-semibold text-primary">{{ service_type.name }}</span>
+            <span class="ml-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">
+                {{ providers_count }} prestador(es)
+            </span>
+        </p>
+    </div>
+    <div class="flex gap-3">
+        <!-- Botão Ver Detalhes do Serviço -->
+        <a href="{% url 'servicetype:detail' service_type.id %}" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors">
+            <i class="fas fa-briefcase mr-2"></i>Ver Serviço
+        </a>
+
+        <!-- Voltar -->
+        <a href="{% url 'servicetype:list' %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Informações do Serviço -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <div class="flex items-center">
+        <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
+            {{ service_type.name|slice:":1"|upper }}
+        </div>
+        <div class="ml-4 flex-1">
+            <h3 class="text-xl font-bold text-gray-800">{{ service_type.name }}</h3>
+            {% if service_type.description %}
+            <p class="text-gray-600 mt-1">{{ service_type.description|truncatewords:20 }}</p>
+            {% endif %}
+        </div>
+        <div class="flex gap-4">
+            {% if service_type.duracao_estimada %}
+            <div class="text-center">
+                <p class="text-sm text-gray-600">Duração Estimada</p>
+                <p class="text-2xl font-bold text-blue-600">{{ service_type.duracao_estimada }}</p>
+                <p class="text-xs text-gray-500">minutos</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Busca -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <form method="GET" class="flex gap-4">
+        <div class="flex-1">
+            <input
+                type="text"
+                name="search"
+                value="{{ request.GET.search }}"
+                placeholder="Buscar prestador por nome, email ou CPF..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+        </div>
+        <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            <i class="fas fa-search mr-2"></i>Buscar
+        </button>
+        {% if request.GET.search %}
+        <a href="{% url 'servicetype:providers' service_type.id %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-times mr-2"></i>Limpar
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Lista de Prestadores -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    {% if providers %}
+    <div class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for provider in providers %}
+            <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow">
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white text-lg font-bold">
+                            {{ provider.full_name|slice:":1"|upper }}
+                        </div>
+                        <div class="ml-3">
+                            <h4 class="font-semibold text-gray-800">{{ provider.full_name }}</h4>
+                            <p class="text-xs text-gray-500">{{ provider.city }}/{{ provider.state }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-2 mb-4">
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-envelope w-5"></i>
+                        <span class="ml-2">{{ provider.email }}</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-600">
+                        <i class="fas fa-phone w-5"></i>
+                        <span class="ml-2">{{ provider.phone }}</span>
+                    </div>
+                </div>
+
+                <!-- Outros Serviços -->
+                {% if provider.service_types.count > 1 %}
+                <div class="mb-4 pt-4 border-t">
+                    <p class="text-xs text-gray-600 mb-2">Outros serviços oferecidos:</p>
+                    <div class="flex flex-wrap gap-1">
+                        {% for st in provider.service_types.all %}
+                            {% if st.id != service_type.id %}
+                            <span class="px-2 py-1 rounded text-xs font-semibold bg-gray-100 text-gray-700">
+                                {{ st.name }}
+                            </span>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Ações -->
+                <div class="flex gap-2">
+                    <a
+                        href="https://wa.me/55{{ provider.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}"
+                        target="_blank"
+                        class="flex-1 px-3 py-2 bg-green-500 text-white text-sm rounded-lg hover:bg-green-600 transition-colors text-center"
+                        title="WhatsApp"
+                    >
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                    <a
+                        href="{% url 'provider:detail' provider.id %}"
+                        class="flex-1 px-3 py-2 bg-primary text-white text-sm rounded-lg hover:bg-purple-700 transition-colors text-center"
+                        title="Ver Perfil"
+                    >
+                        Ver Perfil
+                    </a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-user-tie text-5xl mb-4"></i>
+        <p class="text-lg font-semibold mb-2">Nenhum prestador encontrado</p>
+        {% if request.GET.search %}
+        <p class="text-sm">Tente buscar com outros termos ou <a href="{% url 'servicetype:providers' service_type.id %}" class="text-primary hover:underline">limpe os filtros</a>.</p>
+        {% else %}
+        <p class="text-sm">Ainda não há prestadores cadastrados que ofereçam este serviço.</p>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Estatística -->
+{% if providers %}
+<div class="mt-6 bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl shadow-md p-6 text-white">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm opacity-90 uppercase font-semibold">Total de Prestadores</p>
+            <p class="text-4xl font-bold mt-2">{{ providers_count }}</p>
+            <p class="text-sm opacity-90 mt-1">oferecendo {{ service_type.name }}</p>
+        </div>
+        <div class="w-20 h-20 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+            <i class="fas fa-user-tie text-4xl"></i>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

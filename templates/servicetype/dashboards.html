@@ -1,0 +1,262 @@
+{% extends 'base/base.html' %}
+{% block title %}Dashboards Administrativos - EsferaFlow{% endblock %}
+{% block page_title %}Dashboards Administrativos{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Dashboards Administrativos</h2>
+    <p class="text-gray-600 mt-1">KPIs e análises estratégicas de serviços</p>
+</div>
+
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800">Serviços com Mais OS (Top 10)</h3>
+        <p class="text-sm text-gray-500 mt-1">Quais serviços são mais demandados?</p>
+        <div class="mt-4">
+            <canvas id="chartTopOs" height="140"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800">Serviços com Maior Faturamento (Top 10)</h3>
+        <p class="text-sm text-gray-500 mt-1">Quais serviços geram mais receita?</p>
+        <div class="mt-4">
+            <canvas id="chartTopRevenue" height="140"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800">Lucratividade por Serviço</h3>
+        <p class="text-sm text-gray-500 mt-1">X: quantidade de OS · Y: lucro médio por OS · Bolha: receita total</p>
+        <div class="mt-4">
+            <canvas id="chartProfit" height="140"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800">Demanda x Tempo Médio</h3>
+        <p class="text-sm text-gray-500 mt-1">Quais serviços são populares, mas consomem mais tempo?</p>
+        <div class="mt-4">
+            <canvas id="chartDemandTime" height="140"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800">Estouro de Tempo por Serviço</h3>
+        <p class="text-sm text-gray-500 mt-1">Diferença média entre tempo real e estimado</p>
+        <div class="mt-4">
+            <canvas id="chartOverrun" height="140"></canvas>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-800">Matriz BCG de Serviços</h3>
+        <p class="text-sm text-gray-500 mt-1">X: quantidade de OS · Y: receita média</p>
+        <div class="mt-4">
+            <canvas id="chartBcg" height="140"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="mt-8 flex justify-center">
+    <a href="{% url 'servicetype:list' %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+        <i class="fas fa-arrow-left mr-2"></i>Voltar para Tipos de Serviço
+    </a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const topOsLabels = {{ top_os_labels|safe }};
+    const topOsValues = {{ top_os_values|safe }};
+    const topRevenueLabels = {{ top_revenue_labels|safe }};
+    const topRevenueValues = {{ top_revenue_values|safe }};
+    const profitPoints = {{ profit_points|safe }};
+    const demandTimePoints = {{ demand_time_points|safe }};
+    const overrunLabels = {{ overrun_labels|safe }};
+    const overrunValues = {{ overrun_values|safe }};
+    const bcgPoints = {{ bcg_points|safe }};
+
+    const bcgMedianX = {{ bcg_median_x_json|safe }};
+    const bcgMedianY = {{ bcg_median_y_json|safe }};
+    const bcgMinX = {{ bcg_min_x_json|safe }};
+    const bcgMaxX = {{ bcg_max_x_json|safe }};
+    const bcgMinY = {{ bcg_min_y_json|safe }};
+    const bcgMaxY = {{ bcg_max_y_json|safe }};
+
+    const topOsCtx = document.getElementById('chartTopOs').getContext('2d');
+    const topOsGradient = topOsCtx.createLinearGradient(0, 0, 0, 220);
+    topOsGradient.addColorStop(0, '#60A5FA');
+    topOsGradient.addColorStop(1, '#1D4ED8');
+
+    new Chart(topOsCtx, {
+        type: 'bar',
+        data: {
+            labels: topOsLabels,
+            datasets: [{
+                label: 'Quantidade de OS',
+                data: topOsValues,
+                backgroundColor: topOsGradient
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    const topRevenueCtx = document.getElementById('chartTopRevenue').getContext('2d');
+    const topRevenueGradient = topRevenueCtx.createLinearGradient(0, 0, 0, 220);
+    topRevenueGradient.addColorStop(0, '#34D399');
+    topRevenueGradient.addColorStop(1, '#047857');
+
+    new Chart(topRevenueCtx, {
+        type: 'bar',
+        data: {
+            labels: topRevenueLabels,
+            datasets: [{
+                label: 'Faturamento (R$)',
+                data: topRevenueValues,
+                backgroundColor: topRevenueGradient
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    new Chart(document.getElementById('chartProfit'), {
+        type: 'bubble',
+        data: {
+            datasets: [{
+                label: 'Serviços',
+                data: profitPoints,
+                backgroundColor: 'rgba(99, 102, 241, 0.6)',
+                borderColor: 'rgba(99, 102, 241, 1)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const point = ctx.raw || {};
+                            const name = point.label || 'Serviço';
+                            const qty = point.x ?? 0;
+                            const profit = point.y ?? 0;
+                            return `${name} — OS: ${qty} | Lucro médio: R$ ${profit.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Quantidade de OS' }, beginAtZero: true },
+                y: { title: { display: true, text: 'Lucro médio por OS (R$)' } }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartDemandTime'), {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Serviços',
+                data: demandTimePoints,
+                backgroundColor: 'rgba(245, 158, 11, 0.7)'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const point = ctx.raw || {};
+                            const name = point.label || 'Serviço';
+                            const qty = point.x ?? 0;
+                            const time = point.y ?? 0;
+                            return `${name} — OS: ${qty} | Tempo médio: ${time.toFixed(1)} min`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Quantidade de OS' }, beginAtZero: true },
+                y: { title: { display: true, text: 'Tempo médio (min)' }, beginAtZero: true }
+            }
+        }
+    });
+
+    new Chart(document.getElementById('chartOverrun'), {
+        type: 'bar',
+        data: {
+            labels: overrunLabels,
+            datasets: [{
+                label: 'Minutos acima do estimado',
+                data: overrunValues,
+                backgroundColor: '#DC2626'
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+        }
+    });
+
+    new Chart(document.getElementById('chartBcg'), {
+        type: 'scatter',
+        data: {
+            datasets: [
+                {
+                    label: 'Serviços',
+                    data: bcgPoints,
+                    backgroundColor: 'rgba(16, 185, 129, 0.7)'
+                },
+                {
+                    label: 'Mediana X',
+                    data: [{ x: bcgMedianX, y: bcgMinY }, { x: bcgMedianX, y: bcgMaxY }],
+                    type: 'line',
+                    borderColor: '#9CA3AF',
+                    borderDash: [6, 6],
+                    pointRadius: 0
+                },
+                {
+                    label: 'Mediana Y',
+                    data: [{ x: bcgMinX, y: bcgMedianY }, { x: bcgMaxX, y: bcgMedianY }],
+                    type: 'line',
+                    borderColor: '#9CA3AF',
+                    borderDash: [6, 6],
+                    pointRadius: 0
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => {
+                            const point = ctx.raw || {};
+                            const name = point.label || 'Serviço';
+                            const qty = point.x ?? 0;
+                            const revenue = point.y ?? 0;
+                            return `${name} — OS: ${qty} | Receita média: R$ ${revenue.toFixed(2)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: { title: { display: true, text: 'Quantidade de OS' }, beginAtZero: true },
+                y: { title: { display: true, text: 'Receita média (R$)' }, beginAtZero: true }
+            }
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,123 @@
+{% extends 'base/base.html' %}
+{% block title %}NF/Boleto - EsferaFlow{% endblock %}
+{% block page_title %}NF/Boleto{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <h2 class="text-2xl font-bold text-gray-800">Gerar NF / Boleto</h2>
+    <p class="text-sm text-gray-500">Parcela {{ installment.installment_number }}/{{ installment.installment_total }} - OS {{ order.code }}</p>
+  </div>
+  <a href="{% url 'finance:billing_orders' %}" class="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">
+    <i class="fas fa-arrow-left mr-2"></i>Voltar
+  </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+  <h3 class="text-lg font-semibold text-gray-800 mb-4">Resumo da parcela</h3>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-700">
+    <div>
+      <p class="text-xs uppercase text-gray-500">Cliente</p>
+      <p class="font-semibold">{{ order.client.full_name|default:"-" }}</p>
+    </div>
+    <div>
+      <p class="text-xs uppercase text-gray-500">Vencimento</p>
+      <p class="font-semibold">{{ installment.data_vencimento|date:"d/m/Y" }}</p>
+    </div>
+    <div>
+      <p class="text-xs uppercase text-gray-500">Valor</p>
+      <p class="font-semibold">R$ {{ installment.valor|floatformat:2 }}</p>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="bg-white rounded-xl shadow-md p-6 space-y-6">
+  {% csrf_token %}
+  {% if form.non_field_errors %}
+    <div class="text-sm text-red-600">{{ form.non_field_errors }}</div>
+  {% endif %}
+
+  <div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">Forma de pagamento</label>
+    {{ form.payment_origin }}
+    {% if form.payment_origin.errors %}<p class="text-xs text-red-600 mt-1">{{ form.payment_origin.errors.0 }}</p>{% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="flex items-center gap-2">
+      {{ form.generate_nf }}
+      <label class="text-sm text-gray-700">{{ form.generate_nf.label }}</label>
+    </div>
+    <div class="flex items-center gap-2" id="boletoToggleWrapper">
+      {{ form.generate_boleto }}
+      <label class="text-sm text-gray-700">{{ form.generate_boleto.label }}</label>
+    </div>
+  </div>
+
+  <div id="nfFields" class="space-y-4">
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Numero da NF</label>
+      {{ form.invoice_number }}
+      {% if form.invoice_number.errors %}<p class="text-xs text-red-600 mt-1">{{ form.invoice_number.errors.0 }}</p>{% endif %}
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Data de emissao da NF</label>
+      {{ form.invoice_issued_at }}
+      {% if form.invoice_issued_at.errors %}<p class="text-xs text-red-600 mt-1">{{ form.invoice_issued_at.errors.0 }}</p>{% endif %}
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Descricao do servico na NF</label>
+      {{ form.invoice_description }}
+      {% if form.invoice_description.errors %}<p class="text-xs text-red-600 mt-1">{{ form.invoice_description.errors.0 }}</p>{% endif %}
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Cidade de prestacao</label>
+      {{ form.service_city }}
+      {% if form.service_city.errors %}<p class="text-xs text-red-600 mt-1">{{ form.service_city.errors.0 }}</p>{% endif %}
+    </div>
+  </div>
+
+  <div id="boletoFields" class="space-y-4">
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Numero do boleto</label>
+      {{ form.boleto_number }}
+      {% if form.boleto_number.errors %}<p class="text-xs text-red-600 mt-1">{{ form.boleto_number.errors.0 }}</p>{% endif %}
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">Data de emissao do boleto</label>
+      {{ form.boleto_issued_at }}
+      {% if form.boleto_issued_at.errors %}<p class="text-xs text-red-600 mt-1">{{ form.boleto_issued_at.errors.0 }}</p>{% endif %}
+    </div>
+  </div>
+
+  <button type="submit" class="w-full px-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
+    Salvar
+  </button>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  (function () {
+    const paymentSelect = document.getElementById('id_payment_origin');
+    const boletoToggle = document.getElementById('boletoToggleWrapper');
+    const boletoFields = document.getElementById('boletoFields');
+
+    function refreshBoleto() {
+      if (!paymentSelect) return;
+      const isBoleto = paymentSelect.value === 'boleto';
+      if (boletoToggle) boletoToggle.classList.toggle('hidden', !isBoleto);
+      if (boletoFields) boletoFields.classList.toggle('hidden', !isBoleto);
+      if (!isBoleto) {
+        const checkbox = document.getElementById('id_generate_boleto');
+        if (checkbox) checkbox.checked = false;
+      }
+    }
+
+    if (paymentSelect) {
+      paymentSelect.addEventListener('change', refreshBoleto);
+      refreshBoleto();
+    }
+  })();
+</script>
+{% endblock %}

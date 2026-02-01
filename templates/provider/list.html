@@ -1,0 +1,325 @@
+﻿{% extends 'base/base.html' %}
+{% block title %}Prestadores de Serviço - EsferaFlow{% endblock %}
+{% block page_title %}Prestadores de Serviço{% endblock %}
+
+{% block content %}
+<div class="mb-6 flex justify-between items-center">
+    <h2 class="text-2xl font-bold text-gray-800">Todos os Prestadores de ServiÃ§o</h2>
+    <a href="{% url 'provider:create' %}" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+        <i class="fas fa-plus mr-2"></i>Novo Prestador
+    </a>
+</div>
+
+<!-- Busca e Filtros -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <form method="GET" class="flex flex-col md:flex-row gap-4">
+        <div class="flex-1">
+            <input
+                type="text"
+                name="search"
+                value="{{ request.GET.search }}"
+                placeholder="Buscar por nome, e-mail ou CPF..."
+                class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+        </div>
+        <div class="md:w-64">
+            <select name="service_type" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                <option value="">Todos os tipos de serviÃ§o</option>
+                {% for st in service_types_list %}
+                <option value="{{ st.id }}" {% if request.GET.service_type == st.id|stringformat:"s" %}selected{% endif %}>
+                    {{ st.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            <i class="fas fa-search mr-2"></i>Buscar
+        </button>
+        {% if request.GET.search or request.GET.service_type %}
+        <a href="{% url 'provider:list' %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-times mr-2"></i>Limpar
+        </a>
+        {% endif %}
+    </form>
+</div>
+
+<!-- Tabela -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    {% if providers %}
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Nome</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Tipos de Serviço</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">OS do prestador</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Faturamento (90 dias)</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">AvaliaÃ§Ã£o</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for provider in providers %}
+                <tr class="border-t hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-6">
+                        <a href="{% url 'provider:detail' provider.id %}" class="text-primary font-semibold hover:underline">
+                            {{ provider.full_name }}
+                        </a>
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        {% if provider.service_types.count > 0 %}
+                        {% with first_service=provider.service_types.all|first %}
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">
+                                {{ first_service.name }}
+                            </span>
+                            {% if provider.service_types.count > 0 %}
+                            <button
+                                type="button"
+                                class="p-1 rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                                title="Ver mais serviÃ§os"
+                                data-provider="{{ provider.full_name|escapejs }}"
+                                data-services="{% for st in provider.service_types.all %}{{ st.name }}{% if not forloop.last %}||{% endif %}{% endfor %}"
+                                onclick="openServicesModal(this)"
+                            >
+                                <i class="fas fa-plus text-xs"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endwith %}
+                        {% else %}
+                        <span class="text-gray-500">â€”</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        <span class="px-3 py-1 rounded-full text-sm font-semibold bg-indigo-100 text-indigo-700">{{ provider.work_orders_count }}</span>
+                    </td>
+                    <td class="py-4 px-6 text-center text-sm text-gray-700">
+                        R$ {{ provider.revenue_90d|floatformat:2 }}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        {% if provider.rating_value and provider.rating_value > 0 %}
+                        <div class="flex items-center justify-center gap-1 text-yellow-500">
+                            {% for star in provider.rating_stars %}
+                                {% if star == 'full' %}
+                                <i class="fas fa-star text-sm"></i>
+                                {% elif star == 'half' %}
+                                <i class="fas fa-star-half-stroke text-sm"></i>
+                                {% else %}
+                                <i class="far fa-star text-sm text-gray-300"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="ml-2 text-xs text-gray-500">{{ provider.rating_value|floatformat:1 }}</span>
+                        </div>
+                        {% else %}
+                        <div class="flex items-center justify-center gap-1 text-gray-300">
+                            <i class="far fa-star text-sm"></i>
+                            <i class="far fa-star text-sm"></i>
+                            <i class="far fa-star text-sm"></i>
+                            <i class="far fa-star text-sm"></i>
+                            <i class="far fa-star text-sm"></i>
+                            <span class="ml-2 text-xs text-gray-400">Sem avaliaÃ§Ãµes</span>
+                        </div>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center justify-center gap-2">
+                            <!-- BotÃ£o WhatsApp -->
+                            <a
+                                href="https://wa.me/55{{ provider.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}"
+                                target="_blank"
+                                class="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                                title="Abrir WhatsApp"
+                            >
+                                <i class="fab fa-whatsapp text-lg"></i>
+                            </a>
+
+                            <!-- BotÃ£o HistÃ³rico -->
+                            <a
+                                href="{% url 'provider:history' provider.id %}"
+                                class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                                title="Ver histÃ³rico de ordens"
+                            >
+                                <i class="fas fa-history text-lg"></i>
+                            </a>
+
+                            <!-- BotÃ£o Ver Detalhes -->
+                            <a
+                                href="{% url 'provider:detail' provider.id %}"
+                                class="p-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                                title="Ver detalhes"
+                            >
+                                <i class="fas fa-eye text-lg"></i>
+                            </a>
+
+                            <!-- BotÃ£o Editar -->
+                            <a
+                                href="{% url 'provider:edit' provider.id %}"
+                                class="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                                title="Editar Prestador"
+                            >
+                                <i class="fas fa-edit text-lg"></i>
+                            </a>
+
+                            <!-- BotÃ£o Excluir -->
+                            <a
+                                href="{% url 'provider:delete' provider.id %}"
+                                class="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                                title="Excluir Prestador"
+                            >
+                                <i class="fas fa-trash-alt text-lg"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- PaginaÃ§Ã£o -->
+    {% if is_paginated %}
+    <div class="px-6 py-4 border-t flex justify-between items-center">
+        <span class="text-sm text-gray-600">
+            Mostrando {{ providers|length }} de {{ page_obj.paginator.count }} prestadores
+            (PÃ¡gina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})
+        </span>
+        <div class="space-x-2">
+            {% if page_obj.has_previous %}
+            <a href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.service_type %}&service_type={{ request.GET.service_type }}{% endif %}"
+               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.service_type %}&service_type={{ request.GET.service_type }}{% endif %}"
+               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                <i class="fas fa-angle-left"></i> Anterior
+            </a>
+            {% endif %}
+
+            <span class="px-4 py-2 bg-primary text-white rounded">
+                {{ page_obj.number }}
+            </span>
+
+            {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.service_type %}&service_type={{ request.GET.service_type }}{% endif %}"
+               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                PrÃ³xima <i class="fas fa-angle-right"></i>
+            </a>
+            <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.service_type %}&service_type={{ request.GET.service_type }}{% endif %}"
+               class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+                <i class="fas fa-angle-double-right"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-user-tie text-5xl mb-4"></i>
+        <p class="text-lg font-semibold mb-2">Nenhum prestador encontrado</p>
+        {% if request.GET.search %}
+        <p class="text-sm">Tente buscar com outros termos ou <a href="{% url 'provider:list' %}" class="text-primary hover:underline">limpe os filtros</a>.</p>
+        {% else %}
+        <p class="text-sm">Comece cadastrando o primeiro prestador!</p>
+        <a href="{% url 'provider:create' %}" class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Cadastrar Prestador
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- EstatÃ­sticas -->
+{% if providers %}
+<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Total de Prestadores</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ providers_total }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-user-tie text-2xl text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Prestadores com OS abertas</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ providers_open_orders }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                <i class="fas fa-folder-open text-2xl text-purple-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Prestadores sem OS há 6 meses</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ providers_without_orders_6m }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <i class="fas fa-user-slash text-2xl text-green-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div id="servicesModal" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-50">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4">
+        <div class="flex items-center justify-between px-6 py-4 border-b">
+            <div>
+                <h3 class="text-lg font-bold text-gray-800">ServiÃ§os do prestador</h3>
+                <p id="servicesModalName" class="text-sm text-gray-500"></p>
+            </div>
+            <button type="button" class="text-gray-400 hover:text-gray-600" onclick="closeServicesModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="px-6 py-4">
+            <ul id="servicesModalList" class="space-y-2 text-sm text-gray-700"></ul>
+        </div>
+        <div class="px-6 py-4 border-t flex justify-end">
+            <button type="button" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors" onclick="closeServicesModal()">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openServicesModal(button) {
+    const modal = document.getElementById('servicesModal');
+    const nameEl = document.getElementById('servicesModalName');
+    const listEl = document.getElementById('servicesModalList');
+    const providerName = button.getAttribute('data-provider') || '';
+    const servicesRaw = button.getAttribute('data-services') || '';
+    const services = servicesRaw ? servicesRaw.split('||') : [];
+
+    nameEl.textContent = providerName;
+    listEl.innerHTML = '';
+
+    services.forEach((service) => {
+        const item = document.createElement('li');
+        item.className = 'flex items-center gap-2';
+        item.innerHTML = '<i class="fas fa-check text-green-500 text-xs"></i><span>' + service + '</span>';
+        listEl.appendChild(item);
+    });
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeServicesModal() {
+    const modal = document.getElementById('servicesModal');
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+}
+</script>
+
+{% endblock %}

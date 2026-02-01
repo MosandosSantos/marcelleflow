@@ -1,0 +1,35 @@
+{% extends 'base/base.html' %}
+{% block title %}Avaliar OS {{ order.code }} - EsferaWork{% endblock %}
+{% block page_title %}Avaliar Ordem de Serviço{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-xl shadow-md p-8">
+        <h3 class="text-2xl font-bold mb-6 text-gray-800">{{ order.code }}</h3>
+        <form method="POST">
+            {% csrf_token %}
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-3">Sua Avaliação *</label>
+                <div class="flex space-x-2">
+                    {% for i in "12345" %}
+                    <label class="cursor-pointer">
+                        <input type="radio" name="rating" value="{{ forloop.counter }}" class="hidden peer" required>
+                        <i class="far fa-star text-4xl text-gray-300 peer-checked:fas peer-checked:text-yellow-500 hover:text-yellow-400"></i>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Comentário (opcional)</label>
+                {{ form.comment }}
+            </div>
+            
+            <div class="flex justify-end space-x-4">
+                <a href="{% url 'workorder:detail' order.id %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300">Cancelar</a>
+                <button type="submit" class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">Enviar Avaliação</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

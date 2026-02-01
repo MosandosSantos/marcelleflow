@@ -1,0 +1,43 @@
+{% extends 'base/base.html' %}
+{% block title %}Minhas Solicitações - EsferaWork{% endblock %}
+{% block page_title %}Minhas Solicitações{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+    {% for order in orders %}
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex justify-between items-start">
+            <div class="flex-1">
+                <a href="{% url 'workorder:detail' order.id %}" class="text-xl font-bold text-primary hover:underline">W.O. {{ order.code }}</a>
+                <div class="grid grid-cols-2 gap-2 mt-3">
+                    <p class="text-sm text-gray-700"><strong>Prestador:</strong>
+                        {% if order.provider %}
+                            {{ order.provider.full_name }}
+                        {% else %}
+                            Prestador removido
+                        {% endif %}
+                    </p>
+                    <p class="text-sm text-gray-700"><strong>Serviço:</strong>
+                        {% if order.service_type %}
+                            {{ order.service_type.name }}
+                        {% else %}
+                            Servico removido
+                        {% endif %}
+                    </p>
+                    {% if order.address %}<p class="text-sm text-gray-700"><strong>Endereço:</strong> {{ order.address|truncatechars:40 }}</p>{% endif %}
+                    {% if order.insurance_company %}<p class="text-sm text-gray-700"><strong>Seguradora:</strong> {{ order.insurance_company.name }}</p>{% endif %}
+                    {% if order.service_operator %}<p class="text-sm text-gray-700"><strong>Gestora:</strong> {{ order.service_operator.name }}</p>{% endif %}
+                    {% if order.scheduled_date %}<p class="text-sm text-gray-700"><strong>Agendado:</strong> {{ order.scheduled_date|date:"d/m/Y" }}</p>{% endif %}
+                </div>
+            </div>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold {% if order.status.group_code == 'OPEN' %}bg-yellow-100 text-yellow-700{% elif order.status.group_code == 'IN_PROGRESS' %}bg-blue-100 text-blue-700{% else %}bg-green-100 text-green-700{% endif %}">{{ order.status.status_name }}</span>
+        </div>
+    </div>
+    {% empty %}
+    <div class="bg-white rounded-xl shadow-md p-12 text-center text-gray-500">
+        <i class="fas fa-inbox text-5xl mb-4"></i>
+        <p class="text-lg">Você ainda não tem solicitações.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

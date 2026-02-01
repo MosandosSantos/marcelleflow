@@ -1,0 +1,332 @@
+{% extends 'base/base.html' %}
+{% block title %}Histórico: {{ provider.full_name }} - EsferaFlow{% endblock %}
+{% block page_title %}Histórico do Prestador{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Histórico de Ordens de Serviço</h2>
+        <p class="text-gray-600 mt-1">Prestador: <span class="font-semibold text-primary">{{ provider.full_name }}</span></p>
+    </div>
+    <div class="flex gap-3">
+        <!-- Botão WhatsApp -->
+        <a
+            href="https://wa.me/55{{ provider.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}"
+            target="_blank"
+            class="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+        >
+            <i class="fab fa-whatsapp mr-2"></i>WhatsApp
+        </a>
+
+        <!-- Botão Ver Detalhes -->
+        <a href="{% url 'provider:detail' provider.id %}" class="px-6 py-3 bg-gray-500 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors">
+            <i class="fas fa-user-tie mr-2"></i>Ver Detalhes
+        </a>
+
+        <!-- Voltar -->
+        <a href="{% url 'provider:list' %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Informações do Prestador -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div>
+            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Email</p>
+            <p class="text-gray-800">{{ provider.email }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Telefone</p>
+            <p class="text-gray-800">{{ provider.phone }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">CPF</p>
+            <p class="text-gray-800">{{ provider.cpf }}</p>
+        </div>
+        <div>
+            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Endereço</p>
+            <p class="text-gray-800">{{ provider.city }}/{{ provider.state }}</p>
+        </div>
+    </div>
+
+    {% if provider.service_types.exists %}
+    <div class="mt-4 pt-4 border-t">
+        <p class="text-sm text-gray-600 uppercase font-semibold mb-2">Tipos de Serviço</p>
+        <div class="flex flex-wrap gap-2">
+            {% for service_type in provider.service_types.all %}
+            <span class="px-3 py-1 rounded-lg text-sm font-semibold bg-blue-100 text-blue-700">
+                {{ service_type.name }}
+            </span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Estatísticas -->
+<div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Total de OS</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.total }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-clipboard-list text-2xl text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Pendentes</p>
+                <p class="text-3xl font-bold text-yellow-600 mt-2">{{ stats.pendentes }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                <i class="fas fa-clock text-2xl text-yellow-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Em Andamento</p>
+                <p class="text-3xl font-bold text-blue-600 mt-2">{{ stats.em_andamento }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-sync text-2xl text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Concluídas</p>
+                <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.concluidas }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <i class="fas fa-check-circle text-2xl text-green-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Valor Total</p>
+                <p class="text-2xl font-bold text-purple-600 mt-2">R$ {{ stats.valor_total|floatformat:2 }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                <i class="fas fa-dollar-sign text-2xl text-purple-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card de Avaliação Média -->
+{% if stats.media_avaliacoes %}
+<div class="bg-gradient-to-r from-yellow-400 to-orange-500 rounded-xl shadow-md p-6 mb-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-white text-sm font-semibold uppercase mb-1">Avaliação Média</p>
+            <div class="flex items-center">
+                <p class="text-4xl font-bold text-white mr-3">{{ stats.media_avaliacoes|floatformat:1 }}</p>
+                <div class="flex">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= stats.media_avaliacoes|floatformat:0|add:"0" %}
+                            <i class="fas fa-star text-white text-2xl"></i>
+                        {% else %}
+                            <i class="far fa-star text-white text-2xl"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        <div class="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+            <i class="fas fa-award text-4xl text-white"></i>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Lista de Ordens -->
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="px-6 py-4 bg-gray-50 border-b">
+        <h3 class="text-lg font-semibold text-gray-800">
+            <i class="fas fa-history mr-2"></i>Histórico de Ordens de Serviço
+        </h3>
+    </div>
+
+    {% if work_orders %}
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Código</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Cliente</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Serviço</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Status</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Data</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Valor</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Avaliação</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in work_orders %}
+                <tr class="border-t hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-6">
+                        <a href="{% url 'workorder:detail' order.id %}" class="text-primary font-semibold hover:underline">
+                            {{ order.code }}
+                        </a>
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        {% if order.client %}
+                            {{ order.client.full_name }}
+                        {% else %}
+                            <span class="text-gray-400 italic">Não atribuído</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">{{ order.service_type.name }}</td>
+                    <td class="py-4 px-6">
+                        {% if order.status.group_code == 'OPEN' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% elif order.status.group_code == 'IN_PROGRESS' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% elif order.status.group_code == 'CLOSED' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% else %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-600">{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                    <td class="py-4 px-6 text-sm font-semibold text-gray-800">
+                        {% if order.labor_cost %}
+                            R$ {{ order.labor_cost|floatformat:2 }}
+                        {% else %}
+                            <span class="text-gray-400">-</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        {% if order.evaluation %}
+                        <div class="flex items-center justify-center">
+                            <span class="text-yellow-500 font-semibold">{{ order.evaluation.rating }}</span>
+                            <i class="fas fa-star text-yellow-500 ml-1"></i>
+                        </div>
+                        {% else %}
+                        <span class="text-gray-400 text-xs">Sem avaliação</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center justify-center gap-2">
+                            <a
+                                href="{% url 'workorder:detail' order.id %}"
+                                class="p-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                title="Ver Detalhes"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            {% if user.is_superuser or user.is_staff or user.role == 'admin' or user.role == 'manager' %}
+                            <a
+                                href="{% url 'workorder:edit' order.id %}"
+                                class="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                                title="Editar"
+                            >
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-12 text-gray-500">
+        <i class="fas fa-clipboard-list text-5xl mb-4"></i>
+        <p class="text-lg font-semibold mb-2">Nenhuma ordem de serviço encontrada</p>
+        <p class="text-sm">Este prestador ainda não possui ordens de serviço cadastradas.</p>
+        {% if user.is_superuser or user.is_staff or user.role == 'admin' or user.role == 'manager' %}
+        <a href="{% url 'workorder:create' %}?provider={{ provider.id }}" class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+            <i class="fas fa-plus mr-2"></i>Criar Ordem de Serviço
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Linha do Tempo (Timeline) -->
+{% if work_orders %}
+<div class="mt-8 bg-white rounded-xl shadow-md p-6">
+    <h3 class="text-lg font-semibold text-gray-800 mb-6">
+        <i class="fas fa-stream mr-2"></i>Linha do Tempo
+    </h3>
+
+    <div class="space-y-6">
+        {% for order in work_orders|slice:":10" %}
+        <div class="flex gap-4">
+            <!-- Indicador -->
+            <div class="flex flex-col items-center">
+                <div class="w-3 h-3 rounded-full {% if order.status.group_code == 'CLOSED' %}bg-green-500{% elif order.status.group_code == 'IN_PROGRESS' %}bg-blue-500{% else %}bg-yellow-500{% endif %}"></div>
+                {% if not forloop.last %}
+                <div class="w-0.5 h-full bg-gray-300 mt-1"></div>
+                {% endif %}
+            </div>
+
+            <!-- Conteúdo -->
+            <div class="flex-1 pb-6">
+                <div class="bg-gray-50 rounded-lg p-4">
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-semibold text-gray-800">{{ order.code }}</h4>
+                        <span class="text-xs text-gray-500">{{ order.created_at|date:"d/m/Y H:i" }}</span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">{{ order.service_type.name }}</p>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        {% if order.status.group_code == 'OPEN' %}
+                        <span class="px-2 py-1 rounded text-xs font-semibold bg-yellow-100 text-yellow-700">{{ order.status.status_name }}</span>
+                        {% elif order.status.group_code == 'IN_PROGRESS' %}
+                        <span class="px-2 py-1 rounded text-xs font-semibold bg-blue-100 text-blue-700">{{ order.status.status_name }}</span>
+                        {% elif order.status.group_code == 'CLOSED' %}
+                        <span class="px-2 py-1 rounded text-xs font-semibold bg-green-100 text-green-700">{{ order.status.status_name }}</span>
+                        {% endif %}
+                        {% if order.client %}
+                        <span class="text-xs text-gray-600">Cliente: {{ order.client.full_name }}</span>
+                        {% endif %}
+                        {% if order.evaluation %}
+                        <span class="text-xs text-yellow-600 flex items-center">
+                            <i class="fas fa-star mr-1"></i>{{ order.evaluation.rating }}
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if work_orders.count > 10 %}
+    <div class="text-center mt-6 pt-4 border-t">
+        <p class="text-sm text-gray-600">
+            Mostrando as 10 ordens mais recentes de {{ work_orders.count }} no total
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

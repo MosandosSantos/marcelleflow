@@ -1,0 +1,406 @@
+{% extends 'base/base.html' %}
+{% load finance_extras %}
+{% block title %}Dashboard Financeiro - EsferaFlow{% endblock %}
+{% block page_title %}Dashboard Financeiro{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Dashboard Financeiro</h2>
+      <p class="text-sm text-gray-500">Visão rápida da saúde do caixa e do desempenho do período</p>
+    </div>
+    <button
+      type="button"
+      class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+      title="Em breve"
+      disabled
+    >
+      <i class="fas fa-file-export mr-2"></i>Exportar
+    </button>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+    <form method="get" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Período</label>
+        <select name="period" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">
+          <option value="today" {% if filters.period == 'today' %}selected{% endif %}>Hoje</option>
+          <option value="7d" {% if filters.period == '7d' %}selected{% endif %}>7 dias</option>
+          <option value="30d" {% if filters.period == '30d' %}selected{% endif %}>30 dias</option>
+          <option value="90d" {% if filters.period == '90d' %}selected{% endif %}>90 dias</option>
+          <option value="year" {% if filters.period == 'year' %}selected{% endif %}>Ano</option>
+          <option value="custom" {% if filters.period == 'custom' %}selected{% endif %}>Personalizado</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Data início</label>
+        <input type="date" name="data_inicio" value="{{ filters.data_inicio }}" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Data fim</label>
+        <input type="date" name="data_fim" value="{{ filters.data_fim }}" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm" />
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Conta</label>
+        <select name="account" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">
+          <option value="">Todas as contas</option>
+          {% for account in accounts %}
+          <option value="{{ account.id }}" {% if filters.account == account.id|stringformat:"s" %}selected{% endif %}>{{ account.nome }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Categoria</label>
+        <select name="category" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">
+          <option value="">Todas as categorias</option>
+          {% for category in categories %}
+          <option value="{{ category.id }}" {% if filters.category == category.id|stringformat:"s" %}selected{% endif %}>
+            {{ category.nome }} ({{ category.get_tipo_display }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Status</label>
+        <select name="status" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">
+          <option value="" {% if not filters.status %}selected{% endif %}>Todos</option>
+          <option value="previsto" {% if filters.status == 'previsto' %}selected{% endif %}>Previsto</option>
+          <option value="realizado" {% if filters.status == 'realizado' %}selected{% endif %}>Realizado</option>
+          <option value="atrasado" {% if filters.status == 'atrasado' %}selected{% endif %}>Atrasado</option>
+        </select>
+      </div>
+      <div class="md:col-span-2 lg:col-span-4">
+        <label class="block text-xs font-semibold text-gray-600 mb-1">Tipo</label>
+        <select name="tipo" class="w-full h-10 rounded-lg border border-gray-200 bg-white px-3 text-sm">
+          <option value="" {% if not filters.tipo %}selected{% endif %}>Todos</option>
+          <option value="receita" {% if filters.tipo == 'receita' %}selected{% endif %}>Receita</option>
+          <option value="despesa" {% if filters.tipo == 'despesa' %}selected{% endif %}>Despesa</option>
+        </select>
+      </div>
+      <div class="flex items-end gap-2">
+        <button
+          type="submit"
+          class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+        >
+          <i class="fas fa-search mr-2"></i>Filtrar
+        </button>
+        <a
+          href="{% url 'finance:dashboard' %}"
+          class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+        >
+          <i class="fas fa-eraser mr-2"></i>Limpar
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl shadow-md p-4 border border-gray-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Saldo atual</p>
+        <span class="w-9 h-9 rounded-full bg-gray-100 text-gray-700 flex items-center justify-center">
+          <i class="fas fa-wallet"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-gray-800 mt-2">R$ {{ kpis.saldo_atual|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ period_label }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-green-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Receitas realizadas</p>
+        <span class="w-9 h-9 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
+          <i class="fas fa-arrow-up"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-green-600 mt-2">R$ {{ kpis.receitas_realizadas|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ period_label }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-red-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Despesas realizadas</p>
+        <span class="w-9 h-9 rounded-full bg-red-100 text-red-700 flex items-center justify-center">
+          <i class="fas fa-arrow-down"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-red-600 mt-2">R$ {{ kpis.despesas_realizadas|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ period_label }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-blue-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Receitas a receber</p>
+        <span class="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center">
+          <i class="fas fa-calendar-check"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-blue-600 mt-2">R$ {{ kpis.receitas_a_receber|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">Previstas e em atraso</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-sky-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Receitas previstas</p>
+        <span class="w-9 h-9 rounded-full bg-sky-100 text-sky-700 flex items-center justify-center">
+          <i class="fas fa-file-invoice-dollar"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-sky-700 mt-2">R$ {{ kpis.receitas_previstas_total|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">Previstas e atrasadas (geral)</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-emerald-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Receitas futuras</p>
+        <span class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+          <i class="fas fa-calendar-plus"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-emerald-700 mt-2">R$ {{ kpis.receitas_previstas_futuras|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">A vencer a partir de hoje</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-orange-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Despesas em atraso</p>
+        <span class="w-9 h-9 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center">
+          <i class="fas fa-exclamation-triangle"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-orange-600 mt-2">R$ {{ kpis.despesas_em_atraso|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">Vencidas e não pagas</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-purple-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Saldo projetado</p>
+        <span class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center">
+          <i class="fas fa-chart-line"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-purple-600 mt-2">R$ {{ kpis.saldo_projetado|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ period_label }}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-teal-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Despesas previstas</p>
+        <span class="w-9 h-9 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center">
+          <i class="fas fa-receipt"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-teal-700 mt-2">R$ {{ kpis.despesas_previstas_total|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">Previstas e atrasadas (geral)</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-cyan-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Despesas futuras</p>
+        <span class="w-9 h-9 rounded-full bg-cyan-100 text-cyan-700 flex items-center justify-center">
+          <i class="fas fa-calendar-plus"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-cyan-700 mt-2">R$ {{ kpis.despesas_previstas_futuras|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">A vencer a partir de hoje</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-indigo-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">OS sem NF (previsão)</p>
+        <span class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
+          <i class="fas fa-file-invoice"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-indigo-700 mt-2">R$ {{ kpis.previsao_os_sem_nf|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">Encerradas sem NF emitida</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="bg-white rounded-xl shadow-md p-4 border border-yellow-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Inadimplência</p>
+        <span class="w-9 h-9 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center">
+          <i class="fas fa-exclamation-circle"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-yellow-700 mt-2">R$ {{ kpis.inadimplencia_valor|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">{{ kpis.inadimplencia_percent|floatformat:1 }}% do total a receber</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-indigo-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Resultado do período</p>
+        <span class="w-9 h-9 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center">
+          <i class="fas fa-balance-scale"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-indigo-700 mt-2">R$ {{ kpis.resultado_periodo|brl }}</p>
+      <p class="text-xs text-gray-500 mt-1">Receitas - despesas</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-4 border border-emerald-100">
+      <div class="flex items-center justify-between">
+        <p class="text-xs uppercase text-gray-500">Runway</p>
+        <span class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center">
+          <i class="fas fa-route"></i>
+        </span>
+      </div>
+      <p class="text-xl font-bold text-emerald-700 mt-2">
+        {% if kpis.runway_days %}{{ kpis.runway_days }} dias{% else %}—{% endif %}
+      </p>
+      <p class="text-xs text-gray-500 mt-1">Autonomia do caixa</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Fluxo de Caixa</h3>
+          <p class="text-xs text-gray-500">Saldo diário no período</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button class="px-3 py-2 text-xs font-semibold rounded-full bg-purple-100 text-purple-700">Realizado</button>
+          <button class="px-3 py-2 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">Projetado</button>
+        </div>
+      </div>
+      <canvas id="cashflowChart" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Receitas vs Despesas</h3>
+          <p class="text-xs text-gray-500">Comparativo mensal</p>
+        </div>
+      </div>
+      <canvas id="revenueExpenseChart" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Despesas por Categoria</h3>
+          <p class="text-xs text-gray-500">Pareto de custos</p>
+        </div>
+      </div>
+      <canvas id="expenseCategoryChart" height="120"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Distribuição por Conta</h3>
+          <p class="text-xs text-gray-500">Saldo por conta bancária</p>
+        </div>
+      </div>
+      <canvas id="balanceByAccountChart" height="120"></canvas>
+    </div>
+  </div>
+</div>
+
+{{ chart_data|json_script:"finance-dashboard-data" }}
+
+<script>
+  (function () {
+    const dataEl = document.getElementById('finance-dashboard-data');
+    if (!dataEl || typeof Chart === 'undefined') return;
+    const payload = JSON.parse(dataEl.textContent || '{}');
+
+    const cashflowEl = document.getElementById('cashflowChart');
+    if (cashflowEl && payload.cashflow) {
+      new Chart(cashflowEl, {
+        type: 'line',
+        data: {
+          labels: payload.cashflow.labels || [],
+          datasets: [
+            {
+              label: 'Saldo diário',
+              data: payload.cashflow.data || [],
+              borderColor: '#8B5CF6',
+              backgroundColor: 'rgba(139, 92, 246, 0.12)',
+              tension: 0.3,
+              fill: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#E5E7EB' } },
+          },
+        },
+      });
+    }
+
+    const revenueExpenseEl = document.getElementById('revenueExpenseChart');
+    if (revenueExpenseEl && payload.revenue_expense) {
+      new Chart(revenueExpenseEl, {
+        type: 'bar',
+        data: {
+          labels: payload.revenue_expense.labels || [],
+          datasets: [
+            {
+              label: 'Receitas',
+              data: payload.revenue_expense.revenue || [],
+              backgroundColor: '#16A34A',
+            },
+            {
+              label: 'Despesas',
+              data: payload.revenue_expense.expense || [],
+              backgroundColor: '#EF4444',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#E5E7EB' } },
+          },
+        },
+      });
+    }
+
+    const expenseCategoryEl = document.getElementById('expenseCategoryChart');
+    if (expenseCategoryEl && payload.expense_category) {
+      new Chart(expenseCategoryEl, {
+        type: 'bar',
+        data: {
+          labels: payload.expense_category.labels || [],
+          datasets: [
+            {
+              label: 'Despesas',
+              data: payload.expense_category.data || [],
+              backgroundColor: '#F97316',
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { grid: { color: '#E5E7EB' } },
+          },
+        },
+      });
+    }
+
+    const balanceByAccountEl = document.getElementById('balanceByAccountChart');
+    if (balanceByAccountEl && payload.balance_by_account) {
+      new Chart(balanceByAccountEl, {
+        type: 'doughnut',
+        data: {
+          labels: payload.balance_by_account.labels || [],
+          datasets: [
+            {
+              data: payload.balance_by_account.data || [],
+              backgroundColor: ['#8B5CF6', '#2563EB', '#10B981', '#F59E0B', '#EC4899'],
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: 'bottom' } },
+        },
+      });
+    }
+  })();
+</script>
+{% endblock %}

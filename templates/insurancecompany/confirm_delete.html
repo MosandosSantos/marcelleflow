@@ -1,0 +1,143 @@
+{% extends 'base/base.html' %}
+{% block title %}Excluir Seguradora - EsferaFlow{% endblock %}
+{% block page_title %}Excluir Seguradora{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Cabeçalho -->
+    <div class="mb-6 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-800">Confirmar Exclusão</h2>
+        <a href="{% url 'insurancecompany:detail' insurance_company.id %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+
+    <!-- Aviso de Exclusão -->
+    <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-triangle text-red-500 text-2xl mr-4 mt-1"></i>
+            <div>
+                <h3 class="text-lg font-bold text-red-800 mb-2">Atenção!</h3>
+                <p class="text-red-700">
+                    Você está prestes a excluir a seguradora <strong>{{ insurance_company.name }}</strong>.
+                    Esta ação não pode ser desfeita.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da Seguradora -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-shield-alt text-primary mr-2"></i>Informações da Seguradora
+        </h3>
+
+        <div class="space-y-3">
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Nome:</span>
+                <span class="text-gray-800">{{ insurance_company.name }}</span>
+            </div>
+
+            {% if insurance_company.trade_name %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Nome Fantasia:</span>
+                <span class="text-gray-800">{{ insurance_company.trade_name }}</span>
+            </div>
+            {% endif %}
+
+            {% if insurance_company.document %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">CNPJ:</span>
+                <span class="text-gray-800">{{ insurance_company.document }}</span>
+            </div>
+            {% endif %}
+
+            {% if insurance_company.contact_email %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">E-mail:</span>
+                <span class="text-gray-800">{{ insurance_company.contact_email }}</span>
+            </div>
+            {% endif %}
+
+            {% if insurance_company.contact_phone %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Telefone:</span>
+                <span class="text-gray-800">{{ insurance_company.contact_phone }}</span>
+            </div>
+            {% endif %}
+
+            <div class="flex justify-between py-2">
+                <span class="font-semibold text-gray-700">Status:</span>
+                <span>
+                    {% if insurance_company.is_active %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <i class="fas fa-check-circle mr-1"></i>Ativa
+                    </span>
+                    {% else %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                        <i class="fas fa-times-circle mr-1"></i>Inativa
+                    </span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avisos sobre Ordens de Serviço -->
+    {% if work_orders_count > 0 %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-circle text-yellow-600 text-2xl mr-4 mt-1"></i>
+            <div>
+                <h3 class="text-lg font-bold text-yellow-800 mb-2">Ordens de Serviço Associadas</h3>
+                <p class="text-yellow-700">
+                    Esta seguradora possui <strong>{{ work_orders_count }}</strong> ordem(ns) de serviço associada(s).
+                    Ao excluir esta seguradora, todas as ordens de serviço associadas ficarão sem seguradora.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-600 text-2xl mr-4 mt-1"></i>
+            <div>
+                <h3 class="text-lg font-bold text-blue-800 mb-2">Nenhuma Ordem Associada</h3>
+                <p class="text-blue-700">
+                    Esta seguradora não possui ordens de serviço associadas. A exclusão pode ser realizada sem impacto em ordens de serviço.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulário de Confirmação -->
+    <form method="POST" class="bg-white rounded-xl shadow-md p-6">
+        {% csrf_token %}
+
+        <div class="mb-6">
+            <p class="text-gray-700 text-center text-lg">
+                Tem certeza que deseja excluir a seguradora
+                <strong class="text-red-600">{{ insurance_company.name }}</strong>?
+            </p>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex justify-center gap-4">
+            <a href="{% url 'insurancecompany:detail' insurance_company.id %}" class="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                <i class="fas fa-times mr-2"></i>Cancelar
+            </a>
+            <button type="submit" class="px-8 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors">
+                <i class="fas fa-trash-alt mr-2"></i>Sim, Excluir
+            </button>
+        </div>
+    </form>
+
+    <!-- Informações Adicionais -->
+    <div class="mt-6 text-center text-sm text-gray-600">
+        <i class="fas fa-lock mr-1"></i>
+        Esta ação é permanente e não pode ser desfeita.
+    </div>
+</div>
+
+{% endblock %}

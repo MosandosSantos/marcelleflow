@@ -1,0 +1,390 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ service_operator.name }} - EsferaFlow{% endblock %}
+{% block page_title %}Detalhes da Operadora{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">{{ service_operator.name }}</h2>
+        {% if service_operator.trade_name %}
+        <p class="text-gray-600 mt-1">{{ service_operator.trade_name }}</p>
+        {% endif %}
+    </div>
+    <div class="flex gap-3">
+        <!-- Editar -->
+        <a href="{% url 'servicesoperators:edit' service_operator.id %}" class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors">
+            <i class="fas fa-edit mr-2"></i>Editar
+        </a>
+
+        <!-- Excluir -->
+        <a href="{% url 'servicesoperators:delete' service_operator.id %}" class="px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors">
+            <i class="fas fa-trash-alt mr-2"></i>Excluir
+        </a>
+
+        <!-- Voltar -->
+        <a href="{% url 'servicesoperators:list' %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Informações da Operadora -->
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+        <i class="fas fa-building text-primary mr-2"></i>Informações da Operadora
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Coluna 1 -->
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Razão Social</label>
+                <p class="text-gray-800">{{ service_operator.name }}</p>
+            </div>
+
+            {% if service_operator.trade_name %}
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Nome Fantasia</label>
+                <p class="text-gray-800">{{ service_operator.trade_name }}</p>
+            </div>
+            {% endif %}
+
+            {% if service_operator.cnpj %}
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">CNPJ</label>
+                <p class="text-gray-800">{{ service_operator.cnpj }}</p>
+            </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Status</label>
+                <p>
+                    {% if service_operator.is_active %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <i class="fas fa-check-circle mr-1"></i>Ativa
+                    </span>
+                    {% else %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                        <i class="fas fa-times-circle mr-1"></i>Inativa
+                    </span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Coluna 2 -->
+        <div class="space-y-4">
+            {% if service_operator.email %}
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">E-mail</label>
+                <p class="text-gray-800">
+                    <a href="mailto:{{ service_operator.email }}" class="text-primary hover:underline">
+                        <i class="fas fa-envelope mr-1"></i>{{ service_operator.email }}
+                    </a>
+                </p>
+            </div>
+            {% endif %}
+
+            {% if service_operator.phone %}
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Telefone</label>
+                <p class="text-gray-800">
+                    <i class="fas fa-phone mr-1"></i>{{ service_operator.phone }}
+                </p>
+            </div>
+            {% endif %}
+
+            {% if service_operator.website %}
+            <div>
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Website</label>
+                <p class="text-gray-800">
+                    <a href="{{ service_operator.website }}" target="_blank" class="text-primary hover:underline">
+                        <i class="fas fa-globe mr-1"></i>{{ service_operator.website }}
+                    </a>
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Responsável -->
+{% if service_operator.responsible_name or service_operator.responsible_role %}
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+        <i class="fas fa-user text-primary mr-2"></i>Responsável
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% if service_operator.responsible_name %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Nome do Responsável</label>
+            <p class="text-gray-800">{{ service_operator.responsible_name }}</p>
+        </div>
+        {% endif %}
+
+        {% if service_operator.responsible_role %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Cargo</label>
+            <p class="text-gray-800">{{ service_operator.responsible_role }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Endereço -->
+{% if service_operator.street or service_operator.city or service_operator.state %}
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+        <i class="fas fa-map-marker-alt text-primary mr-2"></i>Endereço
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {% if service_operator.street %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Logradouro</label>
+            <p class="text-gray-800">{{ service_operator.street }}{% if service_operator.number %}, {{ service_operator.number }}{% endif %}</p>
+        </div>
+        {% endif %}
+
+        {% if service_operator.complement %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Complemento</label>
+            <p class="text-gray-800">{{ service_operator.complement }}</p>
+        </div>
+        {% endif %}
+
+        {% if service_operator.district %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Bairro</label>
+            <p class="text-gray-800">{{ service_operator.district }}</p>
+        </div>
+        {% endif %}
+
+        {% if service_operator.city or service_operator.state %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Cidade/Estado</label>
+            <p class="text-gray-800">
+                {% if service_operator.city %}{{ service_operator.city }}{% endif %}{% if service_operator.state %}/{{ service_operator.state }}{% endif %}
+            </p>
+        </div>
+        {% endif %}
+
+        {% if service_operator.zip_code %}
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">CEP</label>
+            <p class="text-gray-800">{{ service_operator.zip_code }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Observações -->
+{% if service_operator.notes %}
+<div class="bg-white rounded-xl shadow-md p-6 mb-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+        <i class="fas fa-sticky-note text-primary mr-2"></i>Observações
+    </h3>
+    <p class="text-gray-700 whitespace-pre-wrap">{{ service_operator.notes }}</p>
+</div>
+{% endif %}
+
+<!-- Estatísticas -->
+{% if stats %}
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+    <!-- Total de Ordens -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Total de Ordens</p>
+                <p class="text-3xl font-bold text-gray-800 mt-2">{{ stats.total }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-clipboard-list text-2xl text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pendentes -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Pendentes</p>
+                <p class="text-3xl font-bold text-yellow-600 mt-2">{{ stats.pendentes }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-yellow-100 flex items-center justify-center">
+                <i class="fas fa-clock text-2xl text-yellow-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Em Andamento -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Em Andamento</p>
+                <p class="text-3xl font-bold text-blue-600 mt-2">{{ stats.em_andamento }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                <i class="fas fa-spinner text-2xl text-blue-600"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Concluídas -->
+    <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-sm text-gray-600 uppercase font-semibold">Concluídas</p>
+                <p class="text-3xl font-bold text-green-600 mt-2">{{ stats.concluidas }}</p>
+            </div>
+            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center">
+                <i class="fas fa-check-circle text-2xl text-green-600"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Valor Total -->
+<div class="bg-gradient-to-r from-purple-500 to-blue-500 rounded-xl shadow-md p-6 mb-6 text-white">
+    <div class="flex items-center justify-between">
+        <div>
+            <p class="text-sm opacity-90 uppercase font-semibold">Valor Total em Ordens</p>
+            <p class="text-4xl font-bold mt-2">R$ {{ stats.valor_total|floatformat:2 }}</p>
+        </div>
+        <div class="w-16 h-16 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+            <i class="fas fa-dollar-sign text-3xl"></i>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Últimas Ordens de Serviço -->
+{% if recent_work_orders %}
+<div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+    <div class="px-6 py-4 border-b">
+        <h3 class="text-lg font-bold text-gray-800">
+            <i class="fas fa-clipboard-list text-primary mr-2"></i>Últimas Ordens de Serviço
+        </h3>
+    </div>
+
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Código</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Cliente</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Prestador</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Serviço</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Status</th>
+                    <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Data Criação</th>
+                    <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in recent_work_orders %}
+                <tr class="border-t hover:bg-gray-50 transition-colors">
+                    <td class="py-4 px-6">
+                        <a href="{% url 'workorder:detail' order.id %}" class="text-primary font-semibold hover:underline">
+                            {{ order.code }}
+                        </a>
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        {% if order.client %}
+                        <a href="{% url 'clients:detail' order.client.id %}" class="text-primary hover:underline">
+                            {{ order.client.full_name }}
+                        </a>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        {% if order.provider %}
+                        <a href="{% url 'provider:detail' order.provider.id %}" class="text-primary hover:underline">
+                            {{ order.provider.full_name }}
+                        </a>
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        {% if order.service_type %}
+                        {{ order.service_type.name }}
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-center">
+                        {% if order.status %}
+                        {% if order.status.group_code == 'OPEN' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% elif order.status.group_code == 'IN_PROGRESS' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% elif order.status.group_code == 'CLOSED' %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% else %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">
+                            {{ order.status.status_name }}
+                        </span>
+                        {% endif %}
+                        {% else %}
+                        —
+                        {% endif %}
+                    </td>
+                    <td class="py-4 px-6 text-sm text-gray-700">
+                        {{ order.created_at|date:"d/m/Y H:i" }}
+                    </td>
+                    <td class="py-4 px-6">
+                        <div class="flex items-center justify-center gap-2">
+                            <a
+                                href="{% url 'workorder:detail' order.id %}"
+                                class="p-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors"
+                                title="Ver Ordem"
+                            >
+                                <i class="fas fa-eye text-sm"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<div class="bg-white rounded-xl shadow-md p-12 text-center text-gray-500 mb-6">
+    <i class="fas fa-clipboard-list text-5xl mb-4"></i>
+    <p class="text-lg font-semibold">Nenhuma ordem de serviço registrada</p>
+    <p class="text-sm mt-2">Esta operadora ainda não possui ordens de serviço associadas.</p>
+</div>
+{% endif %}
+
+<!-- Informações do Sistema -->
+<div class="bg-white rounded-xl shadow-md p-6">
+    <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+        <i class="fas fa-info-circle text-primary mr-2"></i>Informações do Sistema
+    </h3>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Data de Cadastro</label>
+            <p class="text-gray-800">{{ service_operator.created_at|date:"d/m/Y H:i" }}</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-semibold text-gray-600 mb-1">Última Atualização</label>
+            <p class="text-gray-800">{{ service_operator.updated_at|date:"d/m/Y H:i" }}</p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

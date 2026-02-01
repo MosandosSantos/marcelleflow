@@ -1,0 +1,115 @@
+{% extends 'base/base.html' %}
+{% load finance_extras %}
+{% block title %}OS {{ order.code }} - EsferaWork{% endblock %}
+{% block page_title %}Ordem de Serviço {{ order.code }}{% endblock %}
+
+{% block content %}
+{% if access_denied %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
+    Você não tem permissão para visualizar esta ordem de serviço.
+</div>
+{% else %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800">{{ order.code }}</h3>
+                    <p class="text-gray-600">
+                        {% if order.service_type %}
+                            {{ order.service_type.name }}
+                        {% else %}
+                            Servico removido
+                        {% endif %}
+                    </p>
+                </div>
+                <span class="px-4 py-2 rounded-full text-sm font-semibold {% if order.status.group_code == 'OPEN' %}bg-yellow-100 text-yellow-700{% elif order.status.group_code == 'IN_PROGRESS' %}bg-blue-100 text-blue-700{% elif order.status.group_code == 'CLOSED' %}bg-green-100 text-green-700{% else %}bg-gray-100 text-gray-700{% endif %}">
+                    {{ order.status.status_name }}
+                </span>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div><strong>Cliente:</strong>
+                    {% if order.client %}
+                        {{ order.client.full_name }}
+                    {% else %}
+                        Cliente removido
+                    {% endif %}
+                </div>
+                <div><strong>Tecnico:</strong>
+                    {% if order.provider %}
+                        {{ order.provider.full_name }}
+                    {% else %}
+                        Tecnico removido
+                    {% endif %}
+                </div>
+                <div><strong>Serviço:</strong>
+                    {% if order.service_type %}
+                        {{ order.service_type.name }}
+                    {% else %}
+                        Servico removido
+                    {% endif %}
+                </div>
+                <div><strong>Valor do serviço:</strong> R$ {{ order.labor_cost|default:0|brl }}</div>
+                {% if order.insurance_company %}<div><strong>Seguradora:</strong> {{ order.insurance_company.name }}</div>{% endif %}
+                {% if order.service_operator %}<div><strong>Gestora:</strong> {{ order.service_operator.name }}</div>{% endif %}
+                <div><strong>Criado em:</strong> {{ order.created_at|date:"d/m/Y H:i" }}</div>
+                {% if order.scheduled_date %}<div><strong>Agendado para:</strong> {{ order.scheduled_date|date:"d/m/Y" }}</div>{% endif %}
+            </div>
+
+            {% if order.address %}
+            <div class="mb-4">
+                <strong class="block mb-2">Endereço de Atendimento:</strong>
+                <p class="text-gray-700 bg-gray-50 p-4 rounded">{{ order.address }}</p>
+            </div>
+            {% endif %}
+
+            <div class="mb-4">
+                <strong class="block mb-2">Descrição:</strong>
+                <p class="text-gray-700 bg-gray-50 p-4 rounded">{{ order.description }}</p>
+            </div>
+
+            {% if order.technical_report %}
+            <div class="mb-4">
+                <strong class="block mb-2">Laudos:</strong>
+                <p class="text-gray-700 bg-gray-50 p-4 rounded">{{ order.technical_report }}</p>
+            </div>
+            {% endif %}
+
+            
+        </div>
+        
+        {% if can_evaluate %}
+        <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
+            <h4 class="text-lg font-bold mb-3 flex items-center"><i class="fas fa-star text-yellow-500 mr-2"></i>Avalie este serviço</h4>
+            <a href="{% url 'workorder:evaluate' order.id %}" class="inline-block px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600">Avaliar Agora</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <div class="space-y-6">
+        {% if user.role == 'tech' %}
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h4 class="text-lg font-bold mb-4">Ações</h4>
+            {% if can_start %}
+            <a href="{% url 'workorder:start' order.id %}" class="block w-full mb-3 px-4 py-3 bg-primary text-white text-center rounded-lg font-semibold hover:bg-purple-700"><i class="fas fa-play mr-2"></i>Iniciar Serviço</a>
+            {% endif %}
+            {% if can_complete %}
+            <a href="{% url 'workorder:complete' order.id %}" class="block w-full px-4 py-3 bg-green-600 text-white text-center rounded-lg font-semibold hover:bg-green-700"><i class="fas fa-check mr-2"></i>Concluir Serviço</a>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        {% if evaluation %}
+        <div class="bg-white rounded-xl shadow-md p-6">
+            <h4 class="text-lg font-bold mb-3">Avaliação</h4>
+            <div class="text-yellow-500 text-xl mb-2">
+                {% for i in "12345" %}{% if forloop.counter <= evaluation.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}{% endfor %}
+            </div>
+            {% if evaluation.comment %}<p class="text-sm text-gray-700 bg-gray-50 p-3 rounded">{{ evaluation.comment }}</p>{% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

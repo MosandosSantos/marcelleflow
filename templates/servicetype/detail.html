@@ -1,0 +1,295 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ service_type.name }} - EsferaFlow{% endblock %}
+{% block page_title %}Detalhes do Tipo de Serviço{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Informações do Tipo de Serviço</h2>
+        <p class="text-gray-600 mt-1">Cadastrado em {{ service_type.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+    <div class="flex gap-3">
+        <!-- Botão Editar -->
+        <a
+            href="{% url 'servicetype:edit' service_type.id %}"
+            class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+        >
+            <i class="fas fa-edit mr-2"></i>Editar
+        </a>
+
+        <!-- Botão Excluir -->
+        <a
+            href="{% url 'servicetype:delete' service_type.id %}"
+            class="px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
+        >
+            <i class="fas fa-trash-alt mr-2"></i>Excluir
+        </a>
+
+        <!-- Voltar -->
+        <a
+            href="{% url 'servicetype:list' %}"
+            class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+        >
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Grid de Informações -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Coluna Principal -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Card de Informações Principais -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-primary border-b">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-briefcase mr-2"></i>Informações do Serviço
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center mb-6 pb-6 border-b">
+                    <div class="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold">
+                        {{ service_type.name|slice:":1"|upper }}
+                    </div>
+                    <div class="ml-6">
+                        <h3 class="text-2xl font-bold text-gray-800">{{ service_type.name }}</h3>
+                        {% if service_type.is_active %}
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            <i class="fas fa-check-circle mr-1"></i>Ativo
+                        </span>
+                        {% else %}
+                        <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                            <i class="fas fa-times-circle mr-1"></i>Inativo
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    {% if service_type.description %}
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Descrição</p>
+                        <p class="text-gray-800">{{ service_type.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if service_type.ferramentas %}
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Ferramentas Necessárias</p>
+                        <p class="text-gray-800 whitespace-pre-line">{{ service_type.ferramentas }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t">
+                        <div>
+                            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Duração Estimada</p>
+                            {% if service_type.duracao_estimada %}
+                            <p class="text-2xl font-bold text-blue-600">{{ service_type.duracao_estimada }} min</p>
+                            {% else %}
+                            <p class="text-gray-400">Não definido</p>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Duração Média</p>
+                            {% if service_type.duracao_media %}
+                            <p class="text-2xl font-bold text-purple-600">{{ service_type.duracao_media }} min</p>
+                            {% else %}
+                            <p class="text-gray-400">Não calculado</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                    <div class="grid grid-cols-2 gap-4 pt-4 border-t">
+                        <div>
+                            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Valor Unitário</p>
+                            <p class="text-2xl font-bold text-green-600">R$ {{ service_type.unit_price }} / {{ service_type.get_billing_unit_label }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Preço Estimado</p>
+                            <p class="text-2xl font-bold text-green-700">R$ {{ service_type.estimated_price }}</p>
+                        </div>
+                    </div>
+                    <div class="pt-4">
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Quantidade Padrão</p>
+                        <p class="text-lg font-semibold text-gray-800">{{ service_type.default_quantity }} {{ service_type.get_billing_unit_label }}</p>
+                    </div>
+
+            </div>
+        </div>
+
+        <!-- Card de Prestadores -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-user-tie mr-2"></i>Prestadores que Oferecem Este Serviço
+                </h3>
+                {% if providers_count > 0 %}
+                <a href="{% url 'servicetype:providers' service_type.id %}" class="px-4 py-2 bg-primary text-white text-sm rounded-lg hover:bg-purple-700 transition-colors">
+                    Ver Todos ({{ providers_count }})
+                </a>
+                {% endif %}
+            </div>
+            {% if recent_providers %}
+            <div class="p-6">
+                <div class="space-y-3">
+                    {% for provider in recent_providers %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                                {{ provider.full_name|slice:":1"|upper }}
+                            </div>
+                            <div class="ml-3">
+                                <p class="font-semibold text-gray-800">{{ provider.full_name }}</p>
+                                <p class="text-sm text-gray-600">{{ provider.email }}</p>
+                            </div>
+                        </div>
+                        <a href="{% url 'provider:detail' provider.id %}" class="px-3 py-1 bg-primary text-white text-sm rounded hover:bg-purple-700 transition-colors">
+                            Ver Perfil
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% if providers_count > 5 %}
+                <div class="mt-4 pt-4 border-t text-center">
+                    <a href="{% url 'servicetype:providers' service_type.id %}" class="text-primary hover:underline font-semibold">
+                        Ver todos os {{ providers_count }} prestadores <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="p-6 text-center text-gray-500">
+                <i class="fas fa-user-tie text-4xl mb-3"></i>
+                <p class="text-sm">Nenhum prestador cadastrado oferece este serviço ainda.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Card de Ordens Recentes -->
+        {% if recent_work_orders %}
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-clipboard-list mr-2"></i>Ordens de Serviço Recentes
+                </h3>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700">Código</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700">Cliente</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700">Prestador</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700">Status</th>
+                            <th class="text-left py-3 px-4 text-xs font-semibold text-gray-700">Data</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_work_orders %}
+                        <tr class="border-t hover:bg-gray-50">
+                            <td class="py-3 px-4">
+                                <a href="{% url 'workorder:detail' order.id %}" class="text-primary font-semibold hover:underline text-sm">
+                                    {{ order.code }}
+                                </a>
+                            </td>
+                            <td class="py-3 px-4 text-sm text-gray-700">{{ order.client.full_name }}</td>
+                            <td class="py-3 px-4 text-sm text-gray-700">{{ order.provider.full_name }}</td>
+                            <td class="py-3 px-4">
+                                {% if order.status.group_code == 'OPEN' %}
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">{{ order.status.status_name }}</span>
+                                {% elif order.status.group_code == 'IN_PROGRESS' %}
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">{{ order.status.status_name }}</span>
+                                {% elif order.status.group_code == 'CLOSED' %}
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">{{ order.status.status_name }}</span>
+                                {% else %}
+                                <span class="px-2 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-700">{{ order.status.status_name }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="py-3 px-4 text-sm text-gray-600">{{ order.created_at|date:"d/m/Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Coluna Lateral -->
+    <div class="space-y-6">
+        <!-- Card de Estatísticas -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-chart-bar mr-2"></i>Estatísticas
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Prestadores</p>
+                        <p class="text-2xl font-bold text-purple-600">{{ providers_count }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                        <i class="fas fa-user-tie text-2xl text-purple-600"></i>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Ordens de Serviço</p>
+                        <p class="text-2xl font-bold text-blue-600">{{ work_orders_count }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-clipboard-list text-2xl text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Ações Rápidas -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-bolt mr-2"></i>Ações Rápidas
+                </h3>
+            </div>
+            <div class="p-6 space-y-3">
+                {% if user.is_superuser or user.is_staff or user.role == 'admin' or user.role == 'manager' %}
+                <a
+                    href="{% url 'workorder:create' %}?service_type={{ service_type.id }}"
+                    class="block w-full text-center px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                    <i class="fas fa-plus-circle mr-2"></i>Nova Ordem de Serviço
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card de Informações do Sistema -->
+        <div class="bg-gray-50 rounded-xl border border-gray-200 p-6">
+            <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                <i class="fas fa-info-circle mr-2"></i>Informações do Sistema
+            </h4>
+            <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex justify-between">
+                    <span>ID:</span>
+                    <span class="font-mono text-xs">{{ service_type.id }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Cadastrado em:</span>
+                    <span>{{ service_type.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Última Atualização:</span>
+                    <span>{{ service_type.updated_at|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

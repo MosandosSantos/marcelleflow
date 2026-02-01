@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}EsferaFLOW{% endblock %}</title>
+
+    <!-- TailwindCSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- TailwindCSS Custom Config -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: "#8B5CF6",
+              secondary: "#FCD34D",
+              success: "#86EFAC",
+              danger: "#FCA5A5",
+              info: "#93C5FD",
+              sidebar: "#1F2937",
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+    />
+
+    {% block extra_head %}{% endblock %}
+    <style>
+      .sidebar-collapsed #sidebar {
+        width: 5rem;
+      }
+      .sidebar-collapsed #sidebar .nav-label,
+      .sidebar-collapsed #sidebar .section-label,
+      .sidebar-collapsed #sidebar .user-meta,
+      .sidebar-collapsed #sidebar .logo-text {
+        display: none;
+      }
+      .sidebar-collapsed #sidebar .logo-compact {
+        display: inline-flex;
+      }
+      .sidebar-collapsed .main-content {
+        margin-left: 5rem;
+      }
+      .logo-compact {
+        display: none;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-50">
+    {% block body %} {% if user.is_authenticated %}
+    <!-- Layout com Sidebar -->
+    <div class="flex h-screen overflow-hidden">
+      {% include "components/sidebar.html" %}
+
+      <!-- Main Content -->
+      <div class="flex-1 flex flex-col overflow-hidden md:ml-64 main-content">
+        <!-- Top Bar -->
+        <header class="bg-white shadow-sm z-10">
+          <div class="flex items-center justify-between px-6 py-4">
+            <button
+              id="menu-toggle"
+              class="md:hidden text-gray-500 focus:outline-none"
+            >
+              <i class="fas fa-bars text-2xl"></i>
+            </button>
+            <h1 class="text-xl font-semibold text-gray-800">
+              {% block page_title %}Dashboard{% endblock %}
+            </h1>
+            <div class="relative">
+              <!-- User Dropdown Button -->
+              <button
+                id="user-menu-button"
+                class="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800 focus:outline-none"
+              >
+                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-white font-semibold">
+                  {{ user.username|slice:":1"|upper }}
+                </div>
+                <span>Bem-vindo, {{ user.username }}</span>
+                <i class="fas fa-chevron-down text-xs"></i>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div
+                id="user-menu-dropdown"
+                class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
+              >
+                <a
+                  href="{% url 'accounts:profile' %}"
+                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                >
+                  <i class="fas fa-user w-5"></i>
+                  <span class="ml-2">Meu Perfil</span>
+                </a>
+                <div class="border-t border-gray-200 my-1"></div>
+                <a
+                  href="{% url 'accounts:logout' %}"
+                  class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                >
+                  <i class="fas fa-sign-out-alt w-5"></i>
+                  <span class="ml-2">Sair</span>
+                </a>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="px-6 py-4">
+          {% for message in messages %}
+          <div
+            class="{% if message.tags == 'error' %}bg-red-100 border-red-400 text-red-700{% elif message.tags == 'success' %}bg-green-100 border-green-400 text-green-700{% elif message.tags == 'warning' %}bg-yellow-100 border-yellow-400 text-yellow-700{% else %}bg-blue-100 border-blue-400 text-blue-700{% endif %} px-4 py-3 rounded border mb-2"
+          >
+            {{ message }}
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-6">
+          {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+
+    <!-- Mobile Menu Overlay -->
+    <div
+      id="sidebar-overlay"
+      class="hidden fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+    ></div>
+
+    <script>
+      // Mobile menu toggle
+      const menuToggle = document.getElementById("menu-toggle");
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("sidebar-overlay");
+
+      if (menuToggle) {
+        menuToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("-translate-x-full");
+          overlay.classList.toggle("hidden");
+        });
+      }
+
+      if (overlay) {
+        overlay.addEventListener("click", () => {
+          sidebar.classList.add("-translate-x-full");
+          overlay.classList.add("hidden");
+        });
+      }
+
+      // Sidebar collapse toggle (desktop)
+      const collapseBtn = document.getElementById("sidebar-collapse");
+      const bodyEl = document.body;
+      const collapsed = localStorage.getItem("sidebarCollapsed") === "1";
+      if (collapsed) bodyEl.classList.add("sidebar-collapsed");
+      if (collapseBtn) {
+        collapseBtn.addEventListener("click", () => {
+          bodyEl.classList.toggle("sidebar-collapsed");
+          const isCollapsed = bodyEl.classList.contains("sidebar-collapsed");
+          localStorage.setItem("sidebarCollapsed", isCollapsed ? "1" : "0");
+        });
+      }
+
+      // User dropdown menu toggle
+      const userMenuButton = document.getElementById("user-menu-button");
+      const userMenuDropdown = document.getElementById("user-menu-dropdown");
+
+      if (userMenuButton && userMenuDropdown) {
+        userMenuButton.addEventListener("click", (e) => {
+          e.stopPropagation();
+          userMenuDropdown.classList.toggle("hidden");
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+          if (!userMenuButton.contains(e.target) && !userMenuDropdown.contains(e.target)) {
+            userMenuDropdown.classList.add("hidden");
+          }
+        });
+      }
+    </script>
+    {% else %}
+    <!-- Layout sem Sidebar (público) -->
+    <div class="min-h-screen">{% block public_content %}{% endblock %}</div>
+    {% endif %} {% endblock body %} {% block extra_js %}{% endblock %}
+  </body>
+</html>

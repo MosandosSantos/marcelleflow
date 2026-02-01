@@ -1,0 +1,340 @@
+﻿{% extends 'base/base.html' %}
+{% load finance_extras %}
+{% block title %}Contas a Receber - EsferaFlow{% endblock %}
+{% block page_title %}Contas a Receber{% endblock %}
+
+{% block extra_head %}
+<style>
+  #accounts-receivable-page .ar-card {
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+  #accounts-receivable-page .ar-card-header {
+    border-bottom: 1px solid #eef2f6;
+  }
+  #accounts-receivable-page .ar-section-overdue {
+    border-left: 5px solid #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 60%);
+  }
+  #accounts-receivable-page .ar-section-today {
+    border-left: 5px solid #f59e0b;
+    background: linear-gradient(135deg, #fef3c7 0%, #ffffff 60%);
+  }
+  #accounts-receivable-page .ar-section-week {
+    border-left: 5px solid #3b82f6;
+    background: linear-gradient(135deg, #dbeafe 0%, #ffffff 60%);
+  }
+  #accounts-receivable-page .ar-section-month {
+    border-left: 5px solid #10b981;
+    background: linear-gradient(135deg, #ecfdf3 0%, #ffffff 60%);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="accounts-receivable-page" class="space-y-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-semibold text-slate-900">Contas a Receber</h2>
+      <p class="text-sm text-slate-500 mt-1">Receitas pendentes agrupadas por vencimento</p>
+    </div>
+    <a
+      href="{% url 'finance:transaction_create' %}?tipo=receita"
+      class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow hover:bg-purple-700"
+    >
+      <i class="fas fa-plus"></i>
+      Nova Receita
+    </a>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
+    <div class="ar-card p-5 ar-section-overdue">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Atrasadas</p>
+          <p class="mt-2 text-2xl font-semibold text-red-600">R$ {{ overdue_total|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ overdue_count }} conta{{ overdue_count|pluralize:",s" }}</p>
+        </div>
+        <div class="rounded-full bg-red-100 p-2 text-red-700">
+          <i class="fas fa-exclamation-triangle"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-card p-5 ar-section-today">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Vence Hoje</p>
+          <p class="mt-2 text-2xl font-semibold text-orange-600">R$ {{ today_total|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ today_count }} conta{{ today_count|pluralize:",s" }}</p>
+        </div>
+        <div class="rounded-full bg-orange-100 p-2 text-orange-700">
+          <i class="fas fa-bell"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-card p-5 ar-section-week">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Esta Semana</p>
+          <p class="mt-2 text-2xl font-semibold text-blue-600">R$ {{ week_total|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ week_count }} conta{{ week_count|pluralize:",s" }}</p>
+        </div>
+        <div class="rounded-full bg-blue-100 p-2 text-blue-700">
+          <i class="fas fa-calendar-week"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-card p-5 ar-section-month">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Este Mês</p>
+          <p class="mt-2 text-2xl font-semibold text-emerald-600">R$ {{ month_total|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ month_count }} conta{{ month_count|pluralize:",s" }}</p>
+        </div>
+        <div class="rounded-full bg-emerald-100 p-2 text-emerald-700">
+          <i class="fas fa-calendar-alt"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="ar-card p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total Pendente</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-900">R$ {{ grand_total|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ grand_count }} conta{{ grand_count|pluralize:",s" }}</p>
+        </div>
+        <div class="rounded-full bg-slate-100 p-2 text-slate-700">
+          <i class="fas fa-wallet"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar-card">
+    <div class="ar-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-slate-900">Filtros</h3>
+    </div>
+    <div class="px-6 py-6">
+      <form method="get" class="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Conta</label>
+          <select name="account" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+            <option value="">Todas</option>
+            {% for account in accounts %}
+            <option value="{{ account.id }}" {% if account.id|stringformat:"s" == selected_account %}selected{% endif %}>
+              {{ account.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Categoria</label>
+          <select name="category" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+            <option value="">Todas</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+              {{ category.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Serviço</label>
+          <select name="service_type" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+            <option value="">Todos</option>
+            {% for service in service_types %}
+            <option value="{{ service.id }}" {% if service.id|stringformat:"s" == selected_service_type %}selected{% endif %}>
+              {{ service.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Parcelas</label>
+          <select name="is_installment" class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm">
+            <option value="" {% if not selected_is_installment %}selected{% endif %}>Todas</option>
+            <option value="true" {% if selected_is_installment == "true" %}selected{% endif %}>Somente parcelas</option>
+            <option value="false" {% if selected_is_installment == "false" %}selected{% endif %}>Excluir parcelas</option>
+          </select>
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="submit" class="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow hover:bg-purple-700">
+            <i class="fas fa-sync mr-2"></i>Filtrar
+          </button>
+          <a href="{% url 'finance:accounts_receivable' %}" class="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+            Limpar
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  {% if overdue_count > 0 %}
+  <div class="ar-card overflow-hidden ar-section-overdue">
+    <div class="ar-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-red-700">Atrasadas ({{ overdue_count }})</h3>
+      <p class="text-xs text-slate-500 mt-1">Total: R$ {{ overdue_total|brl }}</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-red-700 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left">Vencimento</th>
+            <th class="px-6 py-3 text-left">Descrição</th>
+            <th class="px-6 py-3 text-left">OS</th>
+            <th class="px-6 py-3 text-left">Parcela</th>
+            <th class="px-6 py-3 text-left">NF</th>
+            <th class="px-6 py-3 text-right">Valor</th>
+            <th class="px-6 py-3 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for transaction in overdue_transactions %}
+          <tr class="hover:bg-red-50">
+            <td class="px-6 py-4 font-medium text-red-600">{{ transaction.data_vencimento|date:"d/m/Y" }}</td>
+            <td class="px-6 py-4">{{ transaction.descricao }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.work_order.code|default:"-" }}</td>
+            <td class="px-6 py-4 text-slate-600">
+              {% if transaction.is_installment %}{{ transaction.installment_number }}/{{ transaction.installment_total }}{% else %}-{% endif %}
+            </td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.invoice_number|default:"-" }}</td>
+            <td class="px-6 py-4 text-right font-semibold text-red-600">R$ {{ transaction.valor|brl }}</td>
+            <td class="px-6 py-4 text-center">
+              {% include 'finance/partials/receivable_actions.html' with transaction=transaction %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if today_count > 0 %}
+  <div class="ar-card overflow-hidden ar-section-today">
+    <div class="ar-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-orange-700">Vence Hoje ({{ today_count }})</h3>
+      <p class="text-xs text-slate-500 mt-1">Total: R$ {{ today_total|brl }}</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-orange-600 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left">Descrição</th>
+            <th class="px-6 py-3 text-left">OS</th>
+            <th class="px-6 py-3 text-left">Parcela</th>
+            <th class="px-6 py-3 text-left">NF</th>
+            <th class="px-6 py-3 text-right">Valor</th>
+            <th class="px-6 py-3 text-center">Ações</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for transaction in today_transactions %}
+          <tr class="hover:bg-orange-50">
+            <td class="px-6 py-4">{{ transaction.descricao }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.work_order.code|default:"-" }}</td>
+            <td class="px-6 py-4 text-slate-600">
+              {% if transaction.is_installment %}{{ transaction.installment_number }}/{{ transaction.installment_total }}{% else %}-{% endif %}
+            </td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.invoice_number|default:"-" }}</td>
+            <td class="px-6 py-4 text-right font-semibold text-orange-600">R$ {{ transaction.valor|brl }}</td>
+            <td class="px-6 py-4 text-center">
+              {% include 'finance/partials/receivable_actions.html' with transaction=transaction %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if week_count > 0 %}
+  <div class="ar-card overflow-hidden ar-section-week">
+    <div class="ar-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-blue-700">Esta Semana ({{ week_count }})</h3>
+      <p class="text-xs text-slate-500 mt-1">Total: R$ {{ week_total|brl }}</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-blue-600 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left">Vencimento</th>
+            <th class="px-6 py-3 text-left">Descrição</th>
+            <th class="px-6 py-3 text-left">OS</th>
+            <th class="px-6 py-3 text-left">Parcela</th>
+            <th class="px-6 py-3 text-left">NF</th>
+            <th class="px-6 py-3 text-right">Valor</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for transaction in week_transactions %}
+          <tr class="hover:bg-blue-50">
+            <td class="px-6 py-4 font-medium">{{ transaction.data_vencimento|date:"d/m/Y" }}</td>
+            <td class="px-6 py-4">{{ transaction.descricao }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.work_order.code|default:"-" }}</td>
+            <td class="px-6 py-4 text-slate-600">
+              {% if transaction.is_installment %}{{ transaction.installment_number }}/{{ transaction.installment_total }}{% else %}-{% endif %}
+            </td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.invoice_number|default:"-" }}</td>
+            <td class="px-6 py-4 text-right font-semibold text-blue-600">R$ {{ transaction.valor|brl }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if month_count > 0 %}
+  <div class="ar-card overflow-hidden ar-section-month">
+    <div class="ar-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-emerald-700">Este Mês ({{ month_count }})</h3>
+      <p class="text-xs text-slate-500 mt-1">Total: R$ {{ month_total|brl }}</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-emerald-600 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left">Vencimento</th>
+            <th class="px-6 py-3 text-left">Descrição</th>
+            <th class="px-6 py-3 text-left">OS</th>
+            <th class="px-6 py-3 text-left">Parcela</th>
+            <th class="px-6 py-3 text-left">NF</th>
+            <th class="px-6 py-3 text-right">Valor</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% for transaction in month_transactions %}
+          <tr class="hover:bg-emerald-50">
+            <td class="px-6 py-4 font-medium">{{ transaction.data_vencimento|date:"d/m/Y" }}</td>
+            <td class="px-6 py-4">{{ transaction.descricao }}</td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.work_order.code|default:"-" }}</td>
+            <td class="px-6 py-4 text-slate-600">
+              {% if transaction.is_installment %}{{ transaction.installment_number }}/{{ transaction.installment_total }}{% else %}-{% endif %}
+            </td>
+            <td class="px-6 py-4 text-slate-600">{{ transaction.invoice_number|default:"-" }}</td>
+            <td class="px-6 py-4 text-right font-semibold text-emerald-600">R$ {{ transaction.valor|brl }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if grand_count == 0 %}
+  <div class="ar-card p-10 text-center text-slate-500">
+    <i class="fas fa-file-invoice text-4xl mb-4"></i>
+    <p class="text-lg font-semibold">Nenhuma conta a receber encontrada</p>
+    <p class="text-sm">As receitas previstas aparecerão aqui após gerar as condições de pagamento.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

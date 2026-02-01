@@ -1,0 +1,57 @@
+{% extends 'base/base.html' %}
+{% block title %}Faturamento - Aguardando NF{% endblock %}
+{% block page_title %}Faturamento{% endblock %}
+
+{% block content %}
+{% include 'finance/partials/billing_header.html' %}
+{% include 'finance/partials/billing_tabs.html' %}
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+  <div class="px-6 py-4 border-b">
+    <h3 class="text-lg font-semibold text-gray-800">Aguardando NF</h3>
+    <p class="text-sm text-gray-500">Parcelas aguardando emissao de NF.</p>
+  </div>
+  {% if installments %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">OS</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Cliente</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Servico</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Parcela</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Vencimento</th>
+          <th class="text-right py-4 px-6 text-sm font-semibold text-gray-700">Valor</th>
+          <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Acoes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for parcela in installments %}
+        <tr class="border-t hover:bg-gray-50 transition-colors">
+          <td class="py-4 px-6 text-sm text-gray-700">{{ parcela.work_order.code }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ parcela.work_order.client.full_name|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ parcela.work_order.service_type.name|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ parcela.installment_number }}/{{ parcela.installment_total }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ parcela.data_vencimento|date:"d/m/Y" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700 text-right">R$ {{ parcela.valor|floatformat:2 }}</td>
+          <td class="py-4 px-6 text-center">
+            <a href="{% url 'workorder:detail' parcela.work_order.id %}" class="text-gray-600 hover:text-gray-800" title="Ver OS">
+              <i class="fas fa-eye"></i>
+            </a>
+            <a href="{% url 'finance:installment_nf' parcela.id %}" class="ml-3 text-indigo-600 hover:text-indigo-800" title="Gerar NF/Boleto">
+              <i class="fas fa-file-invoice"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-10 text-gray-500">
+    <i class="fas fa-file-invoice text-4xl mb-3"></i>
+    <p class="text-sm">Nenhuma parcela aguardando NF.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,275 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ client.full_name }} - EsferaFlow{% endblock %}
+{% block page_title %}Detalhes do Cliente{% endblock %}
+
+{% block content %}
+<!-- Cabeçalho -->
+<div class="mb-6 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-bold text-gray-800">Informações do Cliente</h2>
+        <p class="text-gray-600 mt-1">Cadastrado em {{ client.created_at|date:"d/m/Y H:i" }}</p>
+    </div>
+    <div class="flex gap-3">
+        <!-- Botão WhatsApp -->
+        <a
+            href="https://wa.me/55{{ client.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}"
+            target="_blank"
+            class="px-6 py-3 bg-green-500 text-white rounded-lg font-semibold hover:bg-green-600 transition-colors"
+        >
+            <i class="fab fa-whatsapp mr-2"></i>WhatsApp
+        </a>
+
+        <!-- Botão Histórico -->
+        <a
+            href="{% url 'clients:history' client.id %}"
+            class="px-6 py-3 bg-blue-500 text-white rounded-lg font-semibold hover:bg-blue-600 transition-colors"
+        >
+            <i class="fas fa-history mr-2"></i>Histórico
+        </a>
+
+        <!-- Botão Editar -->
+        <a
+            href="{% url 'clients:edit' client.id %}"
+            class="px-6 py-3 bg-yellow-500 text-white rounded-lg font-semibold hover:bg-yellow-600 transition-colors"
+        >
+            <i class="fas fa-edit mr-2"></i>Editar
+        </a>
+
+        <!-- Botão Excluir -->
+        <a
+            href="{% url 'clients:delete' client.id %}"
+            class="px-6 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors"
+        >
+            <i class="fas fa-trash-alt mr-2"></i>Excluir
+        </a>
+
+        <!-- Voltar -->
+        <a
+            href="{% url 'clients:list' %}"
+            class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+        >
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+</div>
+
+<!-- Grid de Informações -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Coluna Principal - Informações Pessoais -->
+    <div class="lg:col-span-2 space-y-6">
+        <!-- Card de Dados Pessoais -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-primary border-b">
+                <h3 class="text-lg font-semibold text-white">
+                    <i class="fas fa-user mr-2"></i>Dados Pessoais
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="flex items-center mb-6 pb-6 border-b">
+                    <div class="w-20 h-20 rounded-full bg-primary flex items-center justify-center text-white text-3xl font-bold">
+                        {{ client.full_name|slice:":1"|upper }}
+                    </div>
+                    <div class="ml-6">
+                        <h3 class="text-2xl font-bold text-gray-800">{{ client.full_name }}</h3>
+                        <p class="text-gray-600">{{ client.email }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">CPF/CNPJ</p>
+                        <p class="text-gray-800 font-medium">
+                            {% if client.cpf %}{{ client.cpf }}{% elif client.cnpj %}{{ client.cnpj }}{% else %}-{% endif %}
+                        </p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Telefone</p>
+                        <p class="text-gray-800 font-medium">{{ client.phone }}</p>
+                    </div>
+                    {% if client.birth_date %}
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Data de Nascimento</p>
+                        <p class="text-gray-800 font-medium">{{ client.birth_date|date:"d/m/Y" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Endereço -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-map-marker-alt mr-2"></i>Endereço
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="col-span-2">
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Logradouro</p>
+                        <p class="text-gray-800 font-medium">{{ client.street }}, {{ client.number }}</p>
+                    </div>
+                    {% if client.complement %}
+                    <div class="col-span-2">
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Complemento</p>
+                        <p class="text-gray-800 font-medium">{{ client.complement }}</p>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Bairro</p>
+                        <p class="text-gray-800 font-medium">{{ client.neighborhood }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">CEP</p>
+                        <p class="text-gray-800 font-medium">{{ client.zip_code }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Cidade</p>
+                        <p class="text-gray-800 font-medium">{{ client.city }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Estado</p>
+                        <p class="text-gray-800 font-medium">{{ client.state }}</p>
+                    </div>
+                </div>
+
+                <!-- Mapa (placeholder) -->
+                <div class="mt-6 pt-6 border-t">
+                    <a
+                        href="https://www.google.com/maps/search/?api=1&query={{ client.street }}+{{ client.number }}+{{ client.city }}+{{ client.state }}"
+                        target="_blank"
+                        class="inline-flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                    >
+                        <i class="fas fa-map-marked-alt mr-2"></i>Ver no Google Maps
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Coluna Lateral - Resumo e Ações -->
+    <div class="space-y-6">
+        <!-- Card de Conta de Usuário -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-user-circle mr-2"></i>Conta de Usuário
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Email de Login</p>
+                        <p class="text-gray-800 font-medium">{{ client.user.email }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Username</p>
+                        <p class="text-gray-800 font-medium">{{ client.user.username }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Tipo de Conta</p>
+                        <p class="text-gray-800 font-medium">{{ client.user.get_role_display }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600 uppercase font-semibold mb-1">Status</p>
+                        {% if client.user.is_active %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            <i class="fas fa-check-circle mr-1"></i>Ativo
+                        </span>
+                        {% else %}
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                            <i class="fas fa-times-circle mr-1"></i>Inativo
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Estatísticas -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-chart-bar mr-2"></i>Resumo
+                </h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600">Ordens de Serviço</p>
+                        <p class="text-2xl font-bold text-primary">{{ client.workorder_set.count }}</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                        <i class="fas fa-clipboard-list text-2xl text-blue-600"></i>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t">
+                    <a
+                        href="{% url 'clients:history' client.id %}"
+                        class="block w-full text-center px-4 py-2 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors"
+                    >
+                        <i class="fas fa-history mr-2"></i>Ver Histórico Completo
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card de Ações Rápidas -->
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="px-6 py-4 bg-gray-50 border-b">
+                <h3 class="text-lg font-semibold text-gray-800">
+                    <i class="fas fa-bolt mr-2"></i>Ações Rápidas
+                </h3>
+            </div>
+            <div class="p-6 space-y-3">
+                <a
+                    href="https://wa.me/55{{ client.phone|cut:' '|cut:'('|cut:')'|cut:'-' }}"
+                    target="_blank"
+                    class="block w-full text-center px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                >
+                    <i class="fab fa-whatsapp mr-2"></i>Enviar WhatsApp
+                </a>
+
+                <a
+                    href="mailto:{{ client.email }}"
+                    class="block w-full text-center px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                    <i class="fas fa-envelope mr-2"></i>Enviar Email
+                </a>
+
+                {% if user.is_superuser or user.is_staff or user.role == 'admin' or user.role == 'manager' %}
+                <a
+                    href="{% url 'workorder:create' %}?client={{ client.id }}"
+                    class="block w-full text-center px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition-colors"
+                >
+                    <i class="fas fa-plus-circle mr-2"></i>Nova Ordem de Serviço
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Card de Informações do Sistema -->
+        <div class="bg-gray-50 rounded-xl border border-gray-200 p-6">
+            <h4 class="text-sm font-semibold text-gray-700 mb-3">
+                <i class="fas fa-info-circle mr-2"></i>Informações do Sistema
+            </h4>
+            <div class="space-y-2 text-sm text-gray-600">
+                <div class="flex justify-between">
+                    <span>ID do Cliente:</span>
+                    <span class="font-mono text-xs">{{ client.id }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Cadastrado em:</span>
+                    <span>{{ client.created_at|date:"d/m/Y H:i" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Última Atualização:</span>
+                    <span>{{ client.updated_at|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

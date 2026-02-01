@@ -1,0 +1,173 @@
+{% extends 'base/base.html' %}
+{% block title %}Acompanhamento de Serviço - Kanban - EsferaWork{% endblock %}
+{% block page_title %}Acompanhamento de Serviço{% endblock %}
+
+{% block content %}
+<div class="mb-6 rounded-3xl bg-gradient-to-br from-primary/70 via-fuchsia-500 to-slate-800 text-white p-6 md:p-8 shadow-xl">
+    <div class="flex flex-wrap justify-between items-start gap-6">
+        <div class="space-y-2">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 text-white/80">
+                <span class="inline-block w-2 h-2 rounded-full bg-violet-300"></span>
+                Fluxo por status
+            </div>
+            <h2 class="text-3xl md:text-4xl font-extrabold tracking-tight">Quadro Kanban</h2>
+            <p class="text-sm md:text-base text-white/70 max-w-2xl">Visualização por status das ordens, com foco em fluxo e prioridades.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-1 bg-white/10 p-1 rounded-2xl backdrop-blur">
+                <a href="{% url 'workorder:list' %}{% if current_query %}?{{ current_query }}{% endif %}"
+                   class="px-4 py-2 rounded-xl text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10">
+                    <i class="fas fa-list mr-2"></i>Lista
+                </a>
+                <a href="{% url 'workorder:calendar' %}{% if current_query %}?{{ current_query }}{% endif %}"
+                   class="px-4 py-2 rounded-xl text-sm font-semibold text-white/70 hover:text-white hover:bg-white/10">
+                    <i class="far fa-calendar-alt mr-2"></i>Calendário
+                </a>
+                <a href="{% url 'workorder:kanban' %}{% if current_query %}?{{ current_query }}{% endif %}"
+                   class="px-4 py-2 rounded-xl text-sm font-semibold bg-white text-slate-900 shadow">
+                    <i class="fas fa-columns mr-2"></i>Kanban
+                </a>
+            </div>
+            {% if can_manage %}
+            <a href="{% url 'workorder:create' %}" class="px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-purple-700 transition-colors shadow-lg shadow-primary/20">
+                <i class="fas fa-plus mr-2"></i>Nova OS
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="bg-white rounded-3xl shadow-lg p-6 md:p-8 mb-6 border border-slate-100">
+    <div class="flex flex-wrap items-center justify-between gap-4 mb-4">
+        <div>
+            <h3 class="text-lg font-semibold text-slate-900">Filtros inteligentes</h3>
+            <p class="text-sm text-slate-500">Refine o quadro por status, tipo e parceiros.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">Abertas</span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">Em andamento</span>
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">Finalizadas</span>
+        </div>
+    </div>
+    <form method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div class="md:col-span-12 flex flex-wrap items-center gap-4 bg-slate-50 border border-slate-100 rounded-2xl p-4">
+            <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input type="checkbox" name="status_open" value="1" class="w-4 h-4 text-primary border-slate-300 rounded"
+                    {% if request.GET.status_open or not request.GET.status_open and not request.GET.status_in_progress and not request.GET.status_closed %}checked{% endif %}>
+                Abertas
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input type="checkbox" name="status_in_progress" value="1" class="w-4 h-4 text-primary border-slate-300 rounded"
+                    {% if request.GET.status_in_progress or not request.GET.status_open and not request.GET.status_in_progress and not request.GET.status_closed %}checked{% endif %}>
+                Em andamento
+            </label>
+            <label class="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input type="checkbox" name="status_closed" value="1" class="w-4 h-4 text-primary border-slate-300 rounded"
+                    {% if request.GET.status_closed or not request.GET.status_open and not request.GET.status_in_progress and not request.GET.status_closed %}checked{% endif %}>
+                Finalizadas
+            </label>
+        </div>
+        <div class="md:col-span-4">
+            <label class="block text-xs font-semibold text-slate-600 mb-2">Buscar</label>
+            {{ filter_form.search }}
+        </div>
+        <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-slate-600 mb-2">Tipo de serviço</label>
+            {{ filter_form.service_type }}
+        </div>
+        <div class="md:col-span-3">
+            <label class="block text-xs font-semibold text-slate-600 mb-2">Operadora</label>
+            {{ filter_form.service_operator }}
+        </div>
+        <div class="md:col-span-2">
+            <label class="block text-xs font-semibold text-slate-600 mb-2">Seguradora</label>
+            {{ filter_form.insurance_company }}
+        </div>
+        <div class="md:col-span-12 flex justify-end gap-3">
+            <a href="{% url 'workorder:kanban' %}" class="px-6 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-semibold hover:bg-slate-200">
+                <i class="fas fa-eraser mr-2"></i>Limpar filtros
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-primary text-white rounded-xl font-semibold hover:bg-purple-700 shadow-lg shadow-primary/20">
+                <i class="fas fa-filter mr-2"></i>Aplicar filtros
+            </button>
+        </div>
+    </form>
+</div>
+
+
+<div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+    <div class="bg-white rounded-2xl border border-slate-100 p-4 shadow-sm">
+        <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total</p>
+        <p class="text-2xl font-bold text-slate-900">{{ summary_stats.total }}</p>
+        <p class="text-xs text-slate-500">Ordens filtradas</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-yellow-100 p-4 shadow-sm">
+        <p class="text-xs font-semibold text-yellow-700 uppercase tracking-wider">Abertas</p>
+        <p class="text-2xl font-bold text-yellow-700">{{ summary_stats.open }}</p>
+        <p class="text-xs text-slate-500">Em abertura</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-blue-100 p-4 shadow-sm">
+        <p class="text-xs font-semibold text-blue-700 uppercase tracking-wider">Em andamento</p>
+        <p class="text-2xl font-bold text-blue-700">{{ summary_stats.in_progress }}</p>
+        <p class="text-xs text-slate-500">Em execu??o</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-green-100 p-4 shadow-sm">
+        <p class="text-xs font-semibold text-green-700 uppercase tracking-wider">Finalizadas</p>
+        <p class="text-2xl font-bold text-green-700">{{ summary_stats.closed }}</p>
+        <p class="text-xs text-slate-500">Encerradas</p>
+    </div>
+    <div class="bg-white rounded-2xl border border-purple-100 p-4 shadow-sm">
+        <p class="text-xs font-semibold text-purple-700 uppercase tracking-wider">Sem data</p>
+        <p class="text-2xl font-bold text-purple-700">{{ summary_stats.unscheduled }}</p>
+        <p class="text-xs text-slate-500">Sem agendamento</p>
+    </div>
+</div>
+
+<div class="overflow-x-auto pb-6">
+ pb-6">
+    <div class="min-w-[1100px] grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
+        {% for column in kanban_columns %}
+        <div class="bg-white rounded-3xl shadow-lg border border-slate-100 border-t-4 {{ column.accent }} p-4 flex flex-col">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="text-sm font-bold uppercase tracking-wider">{{ column.title }}</h3>
+                    <p class="text-xs text-gray-500">{{ column.description }}</p>
+                </div>
+                <span class="text-xs font-semibold px-2 py-1 rounded-full bg-slate-100 text-slate-600">{{ column.count }}</span>
+            </div>
+            <div class="space-y-3">
+                {% for order in column.orders %}
+                <a href="{% url 'workorder:detail' order.id %}" class="block border border-slate-200 rounded-2xl p-3 hover:border-primary/40 hover:bg-primary/5 transition">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm font-semibold text-gray-800">{{ order.code }}</p>
+                        <span class="text-[10px] text-slate-400">{{ order.created_at|date:"d/m" }}</span>
+                    </div>
+                    <p class="text-xs text-slate-500 truncate">
+                        {% if order.client %}{{ order.client.full_name }}{% else %}Cliente removido{% endif %}
+                    </p>
+                    <p class="text-xs text-slate-500 truncate">
+                        {% if order.service_type %}{{ order.service_type.name }}{% else %}Serviço removido{% endif %}
+                    </p>
+                    <div class="mt-2 flex items-center justify-between">
+                        {% if order.scheduled_date %}
+                        <span class="text-[10px] text-slate-500">
+                            <i class="far fa-clock mr-1"></i>{{ order.scheduled_date|date:"d/m/Y" }}
+                        </span>
+                        {% else %}
+                        <span class="text-[10px] text-slate-400">Sem data</span>
+                        {% endif %}
+                        <span class="text-[10px] px-2 py-1 rounded-full bg-slate-100 text-slate-600">{{ order.status.status_name|default:"-"|slice:":12" }}</span>
+                    </div>
+                </a>
+                {% empty %}
+                <div class="border border-dashed border-slate-200 rounded-2xl p-4 text-center text-xs text-slate-400">
+                    Nenhuma OS neste status
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

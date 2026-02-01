@@ -1,0 +1,146 @@
+{% extends 'base/base.html' %}
+{% block title %}Categorias Financeiras - EsferaFlow{% endblock %}
+{% block page_title %}Categorias Financeiras{% endblock %}
+{% block content %}
+  <div class="mb-6">
+  <div class="flex flex-wrap justify-between items-center gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Categorias Financeiras</h2>
+      <p class="text-sm text-gray-500">Organize receitas e despesas</p>
+    </div>
+    <a
+      href="{% url 'finance:category_create' %}"
+      class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+    >
+      <i class="fas fa-plus mr-2"></i>Nova categoria
+    </a>
+  </div>
+  {% include 'finance/_submenu.html' %}
+</div>
+
+<div class="mb-4 flex flex-wrap gap-3">
+  <a
+    href="{% url 'finance:category_list' %}"
+    class="px-5 py-2 rounded-full text-sm font-semibold border transition-colors {% if request.GET.tipo != 'receita' and request.GET.tipo != 'despesa' %}bg-primary text-white border-transparent hover:border-purple-600 hover:bg-purple-700{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-purple-600{% endif %}"
+  >
+    Todos
+  </a>
+  <a
+    href="{% url 'finance:category_list' %}?tipo=receita"
+    class="px-5 py-2 rounded-full text-sm font-semibold border transition-colors {% if request.GET.tipo == 'receita' %}bg-primary text-white border-transparent hover:border-purple-600 hover:bg-purple-700{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-purple-600{% endif %}"
+  >
+    Receitas
+  </a>
+  <a
+    href="{% url 'finance:category_list' %}?tipo=despesa"
+    class="px-5 py-2 rounded-full text-sm font-semibold border transition-colors {% if request.GET.tipo == 'despesa' %}bg-primary text-white border-transparent hover:border-purple-600 hover:bg-purple-700{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-purple-600{% endif %}"
+  >
+    Despesas
+  </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+  {% if categories %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-purple-600">
+        <tr>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Categoria</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Tipo</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Status</th>
+          <th class="text-center py-4 px-6 text-sm font-semibold text-white">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for category in categories %}
+        <tr class="{% cycle 'bg-white' 'bg-purple-50/40' %} border-t hover:bg-purple-50/70 transition-colors">
+          <td class="py-4 px-6 font-semibold text-gray-800">{{ category.nome }}</td>
+          <td class="py-4 px-6 text-sm text-gray-600">{{ category.get_tipo_display }}</td>
+          <td class="py-4 px-6">
+            {% if category.ativa %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Ativa</span>
+            {% else %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">Inativa</span>
+            {% endif %}
+          </td>
+          <td class="py-4 px-6">
+            <div class="flex items-center justify-center gap-2">
+              <a
+                href="{% url 'finance:category_update' category.id %}"
+                class="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                title="Editar"
+              >
+                <i class="fas fa-edit text-sm"></i>
+              </a>
+              <a
+                href="{% url 'finance:category_delete' category.id %}"
+                class="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                title="Excluir"
+              >
+                <i class="fas fa-trash-alt text-sm"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-12 text-gray-500">
+    <i class="fas fa-tags text-5xl mb-4"></i>
+    <p class="text-lg font-semibold mb-2">Nenhuma categoria cadastrada</p>
+    <p class="text-sm">Cadastre categorias para classificar receitas e despesas.</p>
+    <a
+      href="{% url 'finance:category_create' %}"
+      class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+    >
+      <i class="fas fa-plus mr-2"></i>Nova categoria
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% if is_paginated %}
+<div class="mt-6 flex flex-wrap justify-between items-center gap-4">
+  <span class="text-sm text-gray-600">
+    Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+  </span>
+  <div class="space-x-2">
+    {% if page_obj.has_previous %}
+    <a
+      href="?page=1{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}"
+      class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+    >
+      <i class="fas fa-angle-double-left"></i>
+    </a>
+    <a
+      href="?page={{ page_obj.previous_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}"
+      class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+    >
+      <i class="fas fa-angle-left"></i> Anterior
+    </a>
+    {% endif %}
+
+    <span class="px-4 py-2 bg-primary text-white rounded">
+      {{ page_obj.number }}
+    </span>
+
+    {% if page_obj.has_next %}
+    <a
+      href="?page={{ page_obj.next_page_number }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}"
+      class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+    >
+      Proxima <i class="fas fa-angle-right"></i>
+    </a>
+    <a
+      href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.tipo %}&tipo={{ request.GET.tipo }}{% endif %}"
+      class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors"
+    >
+      <i class="fas fa-angle-double-right"></i>
+    </a>
+    {% endif %}
+  </div>
+</div>
+{% endif %}

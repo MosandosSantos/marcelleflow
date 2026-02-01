@@ -1,0 +1,191 @@
+<aside
+  id="sidebar"
+  class="bg-sidebar text-white w-64 fixed inset-y-0 left-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out z-30"
+>
+  <div class="flex flex-col h-full">
+    <!-- Logo -->
+    <div class="flex items-center justify-between h-16 bg-gray-900 px-3">
+      <div class="flex items-center">
+        <span class="text-2xl font-bold text-primary logo-text">Esfera</span>
+        <span class="text-2xl font-bold logo-text">FLOW</span>
+        <span class="text-2xl font-bold text-primary logo-compact">E</span>
+      </div>
+      <button id="sidebar-collapse" class="text-gray-400 hover:text-white hidden md:inline-flex">
+        <i class="fas fa-angle-left"></i>
+      </button>
+    </div>
+
+  
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto py-4">
+      <a
+        href="{% url 'dashboard' %}"
+        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+      >
+        <i class="fas fa-th-large w-6"></i>
+        <span class="ml-3 nav-label">Dashboard</span>
+      </a>
+
+      {% if user.is_superuser or user.role == 'admin' or user.role == 'operational' or user.role == 'financial' %}
+      <!-- SEÇÃO OPERAÇÃO -->
+      <div class="px-4 py-2 mt-4 section-label">
+        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Operação</span>
+      </div>
+
+      <a
+        href="{% url 'workorder:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-screwdriver-wrench w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Ordens de Serviço</span>
+      </a>
+
+      {% if user.is_superuser or user.role == 'admin' %}
+      <a
+        href="{% url 'clients:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-users w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Clientes</span>
+      </a>
+
+      <a
+        href="{% url 'provider:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-user-tie w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Prestadores</span>
+      </a>
+
+      <a
+        href="{% url 'servicetype:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-list-check w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Tipos de Serviço</span>
+      </a>
+
+      <a
+        href="{% url 'servicesoperators:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-headset w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Operadoras</span>
+      </a>
+
+      <a
+        href="{% url 'insurancecompany:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-shield-halved w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Seguradoras</span>
+      </a>
+      {% endif %}
+
+      {% endif %}
+
+      {% if user.is_superuser or user.role == 'admin' or user.role == 'financial' %}
+      <!-- SEÇÃO FINANCEIRO -->
+      <div class="px-4 py-2 mt-4 section-label">
+        <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">Financeiro</span>
+      </div>
+
+      <a
+        href="{% url 'finance:dashboard' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-chart-column w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Dashboard</span>
+      </a>
+
+      <a
+        href="{% url 'finance:billing_list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-file-invoice-dollar w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Faturamento</span>
+      </a>
+
+      <a
+        href="{% url 'finance:transaction_list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-right-left w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Transações</span>
+      </a>
+
+      <a
+        href="{% url 'finance:accounts_payable' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-file-arrow-down w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Contas a Pagar</span>
+      </a>
+
+      <a
+        href="{% url 'finance:accounts_receivable' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-file-arrow-up w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Contas a Receber</span>
+      </a>
+
+      <a
+        href="{% url 'finance:cashflow' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-money-bill-wave w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Fluxo de Caixa</span>
+      </a>
+
+
+      <a
+        href="{% url 'finance:account_list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-building-columns w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Contas Bancárias</span>
+      </a>
+
+      <a
+        href="{% url 'finance:category_list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-tags w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Categorias</span>
+      </a>
+
+      {% if user.role == 'financial' %}
+      <a
+        href="{% url 'clients:list' %}"
+        class="flex items-center px-4 py-2 text-gray-400 hover:bg-gray-700 hover:text-white transition-colors text-sm"
+      >
+        <i class="fas fa-magnifying-glass w-5 text-xs"></i>
+        <span class="ml-3 nav-label">Clientes (Consulta)</span>
+      </a>
+      {% endif %}
+      {% endif %}
+
+      {% if user.role == 'tech' %}
+      <a
+        href="{% url 'workorder:my_orders' %}"
+        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+      >
+        <i class="fas fa-clipboard-list w-6"></i>
+        <span class="ml-3 nav-label">Minhas Ordens</span>
+      </a>
+      {% endif %}
+
+      {% if user.role == 'customer' %}
+      <a
+        href="{% url 'workorder:my_requests' %}"
+        class="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+      >
+        <i class="fas fa-inbox w-6"></i>
+        <span class="ml-3 nav-label">Minhas Solicitações</span>
+      </a>
+      {% endif %}
+    </nav>
+  </div>
+</aside>

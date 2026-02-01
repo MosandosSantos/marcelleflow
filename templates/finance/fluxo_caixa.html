@@ -1,0 +1,540 @@
+{% extends 'base/base.html' %}
+{% load finance_extras %}
+{% block title %}Fluxo de Caixa - EsferaFlow{% endblock %}
+{% block page_title %}Fluxo de Caixa{% endblock %}
+
+{% block extra_head %}
+<style>
+  #cashflow-page .cf-card {
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+  #cashflow-page .cf-card-header {
+    border-bottom: 1px solid #eef2f6;
+  }
+  #cashflow-page .cf-card-accent {
+    border-left: 5px solid #8B5CF6;
+    background: linear-gradient(135deg, #f5f3ff 0%, #ffffff 60%);
+  }
+  #cashflow-page .cf-card-accent-warm {
+    border-left: 5px solid #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 60%);
+  }
+  #cashflow-page .cf-card-accent-cool {
+    border-left: 5px solid #8B5CF6;
+    background: linear-gradient(135deg, #ede9fe 0%, #ffffff 60%);
+  }
+  #cashflow-page .cf-pill {
+    background: #8B5CF6;
+    color: #ffffff;
+  }
+  #cashflow-page .cf-table thead {
+    background: #7c3aed;
+    color: #f8fafc;
+  }
+  #cashflow-page .cf-table tbody tr.cf-row-active {
+    outline: 2px solid #8B5CF6;
+    outline-offset: -2px;
+  }
+  #cashflow-page .cf-table tbody tr.cf-detail-row {
+    background: #f8fafc;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="cashflow-page" class="space-y-8">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-semibold text-slate-900">Fluxo de Caixa</h2>
+      <p class="text-sm text-slate-500 mt-1">Visão geral das receitas e despesas da loja</p>
+    </div>
+    {% if can_manage_finance %}
+    <a
+      href="{% url 'finance:transaction_create' %}"
+      class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow hover:bg-purple-700"
+    >
+      <i class="fas fa-plus"></i>
+      Nova Conta
+    </a>
+    {% endif %}
+  </div>
+
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+    <div class="cf-card cf-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Saldo {{ previous_year }}</p>
+          <p class="mt-2 text-2xl font-semibold {% if summary.ano_anterior.saldo < 0 %}text-red-600{% else %}text-slate-900{% endif %}">
+            R$ {{ summary.ano_anterior.saldo|brl }}
+          </p>
+          <p class="mt-1 text-xs text-slate-400">Fechamento do ano anterior</p>
+        </div>
+        <div class="rounded-full bg-purple-100 p-2 text-purple-700">
+          <i class="fas fa-archive"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Receitas {{ current_year }}</p>
+          <p class="mt-2 text-2xl font-semibold text-green-600">R$ {{ summary.ano_atual.receitas|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Entradas no ano atual</p>
+        </div>
+        <div class="rounded-full bg-green-100 p-2 text-green-700">
+          <i class="fas fa-arrow-trend-up"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent-warm p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Despesas {{ current_year }}</p>
+          <p class="mt-2 text-2xl font-semibold text-red-500">R$ {{ summary.ano_atual.despesas|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Saídas no ano atual</p>
+        </div>
+        <div class="rounded-full bg-red-100 p-2 text-red-700">
+          <i class="fas fa-arrow-trend-down"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent-cool p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Resultado {{ current_year }}</p>
+          <p class="mt-2 text-2xl font-semibold {% if resultado_ano < 0 %}text-red-600{% else %}text-purple-700{% endif %}">R$ {{ resultado_ano|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Saldo acumulado do ano</p>
+        </div>
+        <div class="rounded-full bg-purple-100 p-2 text-purple-700">
+          <i class="fas fa-chart-line"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Saldo {{ previous_month_label }}/{{ previous_month_year }}</p>
+          <p class="mt-2 text-2xl font-semibold {% if summary.mes_anterior.saldo < 0 %}text-red-600{% else %}text-slate-900{% endif %}">R$ {{ summary.mes_anterior.saldo|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Fechamento do mês anterior</p>
+        </div>
+        <div class="rounded-full bg-purple-100 p-2 text-purple-700">
+          <i class="fas fa-calendar-minus"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Receitas {{ current_month_label }}/{{ current_year }}</p>
+          <p class="mt-2 text-2xl font-semibold text-green-600">R$ {{ summary.mes_atual.receitas|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Entradas no mês atual</p>
+        </div>
+        <div class="rounded-full bg-green-100 p-2 text-green-700">
+          <i class="fas fa-circle-plus"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent-warm p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Despesas {{ current_month_label }}/{{ current_year }}</p>
+          <p class="mt-2 text-2xl font-semibold text-red-500">R$ {{ summary.mes_atual.despesas|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Saídas no mês atual</p>
+        </div>
+        <div class="rounded-full bg-red-100 p-2 text-red-700">
+          <i class="fas fa-circle-minus"></i>
+        </div>
+      </div>
+    </div>
+    <div class="cf-card cf-card-accent-cool p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Resultado {{ current_month_label }}/{{ current_year }}</p>
+          <p class="mt-2 text-2xl font-semibold {% if resultado_mes < 0 %}text-red-600{% else %}text-purple-700{% endif %}">R$ {{ resultado_mes|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Saldo acumulado do mês</p>
+        </div>
+        <div class="rounded-full bg-purple-100 p-2 text-purple-700">
+          <i class="fas fa-bolt"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-slate-900">Período</h3>
+      <p class="text-xs text-slate-500 mt-1">Defina o intervalo para atualizar o fluxo de caixa</p>
+    </div>
+    <div class="px-6 py-6">
+      <form id="cashflow-filter-form" method="get" class="grid grid-cols-1 gap-4 md:grid-cols-6">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Data início</label>
+          <input
+            type="date"
+            name="start"
+            value="{{ start_date|date:'Y-m-d' }}"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Data fim</label>
+          <input
+            type="date"
+            name="end"
+            value="{{ end_date|date:'Y-m-d' }}"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          />
+        </div>
+        <input type="hidden" name="phase" value="{{ phase }}">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Conta</label>
+          <select
+            name="account"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          >
+            <option value="">Todas</option>
+            {% for account in accounts %}
+            <option value="{{ account.id }}" {% if account.id|stringformat:"s" == selected_account %}selected{% endif %}>
+              {{ account.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Categoria</label>
+          <select
+            name="category"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          >
+            <option value="">Todas</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+              {{ category.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex flex-wrap items-end gap-2">
+          <button
+            type="submit"
+            class="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow hover:bg-purple-700"
+          >
+            <i class="fas fa-sync mr-2"></i>Atualizar
+          </button>
+          <button
+            type="button"
+            class="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            data-range="current"
+          >
+            Ano Atual
+          </button>
+          <button
+            type="button"
+            class="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+            data-range="previous"
+          >
+            Ano Anterior
+          </button>
+          <a
+            href="{% url 'finance:cashflow' %}"
+            class="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            Limpar
+          </a>
+        </div>
+      </form>
+      <div class="flex flex-wrap gap-3 mt-4">
+        <button
+          type="button"
+          data-phase-target="consolidado"
+          class="flex-1 rounded-full border px-4 py-3 text-sm font-semibold transition-colors text-slate-600 border-slate-200 hover:bg-purple-50 {% if phase == 'consolidado' %}bg-purple-600 text-white border-transparent{% endif %}"
+        >
+          Visão Consolidada
+        </button>
+        <button
+          type="button"
+          data-phase-target="futuro"
+          class="flex-1 rounded-full border px-4 py-3 text-sm font-semibold transition-colors text-slate-600 border-slate-200 hover:bg-purple-50 {% if phase == 'futuro' %}bg-purple-600 text-white border-transparent{% endif %}"
+        >
+          Visão Futuro
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-900">Fluxo de Caixa</h2>
+    <p class="text-sm text-slate-500 mt-1">Visão consolidada mensal de entradas, saídas e saldos</p>
+  </div>
+
+  <div class="cf-card overflow-hidden">
+    {% if not month_labels %}
+      <div class="px-6 py-10 text-center text-slate-500">
+        Selecione um período válido para visualizar o fluxo de caixa
+      </div>
+    {% else %}
+      <div class="overflow-x-auto">
+        <table class="cf-table w-full text-sm">
+          <thead>
+            <tr>
+              <th class="px-4 py-3 text-left w-12"></th>
+              <th class="px-4 py-3 text-left">Indicador</th>
+              {% for item in month_labels %}
+              <th class="px-4 py-3 text-center border-l border-slate-700/40">{{ item.full_label }}</th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-purple-50/40" data-row="saldoFinal">
+              <td class="px-4 py-3">
+                <button type="button" class="cf-pill h-8 w-8 rounded-full text-sm font-semibold" data-cf-toggle="saldoFinal">+</button>
+              </td>
+              <td class="px-4 py-3 font-semibold text-purple-700">Saldo Final</td>
+              {% for value in saldo_final_values %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 {% if value < 0 %}text-red-600{% else %}text-purple-700{% endif %}">
+                R$ {{ value|brl }}
+              </td>
+              {% endfor %}
+            </tr>
+            <tr class="bg-purple-50/40" data-row="resultado">
+              <td class="px-4 py-3">
+                <button type="button" class="cf-pill h-8 w-8 rounded-full text-sm font-semibold" data-cf-toggle="resultado">+</button>
+              </td>
+              <td class="px-4 py-3 font-semibold text-purple-700">Resultado do Período</td>
+              {% for value in resultado_values %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 {% if value < 0 %}text-red-600{% else %}text-purple-700{% endif %}">
+                R$ {{ value|brl }}
+              </td>
+              {% endfor %}
+            </tr>
+            <tr class="bg-purple-50/40" data-row="saldoInicial">
+              <td class="px-4 py-3">
+                <button type="button" class="cf-pill h-8 w-8 rounded-full text-sm font-semibold" data-cf-toggle="saldoInicial">+</button>
+              </td>
+              <td class="px-4 py-3 font-semibold text-purple-700">Saldo Inicial</td>
+              {% for value in saldo_inicial_values %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 {% if value < 0 %}text-red-600{% else %}text-purple-700{% endif %}">
+                R$ {{ value|brl }}
+              </td>
+              {% endfor %}
+            </tr>
+            <tr class="bg-purple-50/40" data-row="totalSaida">
+              <td class="px-4 py-3">
+                <button type="button" class="cf-pill h-8 w-8 rounded-full text-sm font-semibold" data-cf-toggle="totalSaida">+</button>
+              </td>
+              <td class="px-4 py-3 font-semibold text-purple-700">Total Saída</td>
+              {% for value in total_saida_values %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 text-red-600">R$ {{ value|brl }}</td>
+              {% endfor %}
+            </tr>
+            {% if despesas %}
+            {% for row in despesas %}
+            <tr class="cf-detail-row hidden" data-detail="totalSaida">
+              <td class="px-4 py-3 text-slate-400">
+                <i class="fas fa-corner-down-right"></i>
+              </td>
+              <td class="px-4 py-3 text-slate-600">{{ row.category_name }}</td>
+              {% for cell in row.cells %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 text-red-500">R$ {{ cell.value|brl }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr class="cf-detail-row hidden" data-detail="totalSaida">
+              <td class="px-4 py-3"></td>
+              <td class="px-4 py-3 text-slate-500" colspan="{{ month_labels|length }}">Nenhuma despesa encontrada.</td>
+            </tr>
+            {% endif %}
+            <tr class="bg-purple-50/40" data-row="totalEntrada">
+              <td class="px-4 py-3">
+                <button type="button" class="cf-pill h-8 w-8 rounded-full text-sm font-semibold" data-cf-toggle="totalEntrada">+</button>
+              </td>
+              <td class="px-4 py-3 font-semibold text-purple-700">Total Entrada</td>
+              {% for value in total_entrada_values %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 text-green-600">R$ {{ value|brl }}</td>
+              {% endfor %}
+            </tr>
+            {% if receitas %}
+            {% for row in receitas %}
+            <tr class="cf-detail-row hidden" data-detail="totalEntrada">
+              <td class="px-4 py-3 text-slate-400">
+                <i class="fas fa-corner-down-right"></i>
+              </td>
+              <td class="px-4 py-3 text-slate-600">{{ row.category_name }}</td>
+              {% for cell in row.cells %}
+              <td class="px-4 py-3 text-right border-l border-slate-200 text-green-600">R$ {{ cell.value|brl }}</td>
+              {% endfor %}
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr class="cf-detail-row hidden" data-detail="totalEntrada">
+              <td class="px-4 py-3"></td>
+              <td class="px-4 py-3 text-slate-500" colspan="{{ month_labels|length }}">Nenhuma receita encontrada.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="cf-card">
+    <div class="cf-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-slate-900">Previsão de Caixa</h3>
+      <p class="text-xs text-slate-500 mt-1">Evolução do saldo realizado, tendência e projeção futura</p>
+    </div>
+    <div class="px-6 py-6">
+      <canvas id="cashflowForecastChart" height="120"></canvas>
+    </div>
+  </div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{{ chart_labels|json_script:"cashflow-chart-labels" }}
+{{ chart_saldo_final|json_script:"cashflow-chart-saldo-final" }}
+{{ chart_resultado|json_script:"cashflow-chart-resultado" }}
+<script>
+  (function () {
+    const filterForm = document.getElementById('cashflow-filter-form');
+    const startInput = filterForm ? filterForm.querySelector('input[name="start"]') : null;
+    const endInput = filterForm ? filterForm.querySelector('input[name="end"]') : null;
+    const phaseInput = filterForm ? filterForm.querySelector('input[name="phase"]') : null;
+
+    document.querySelectorAll('[data-range]').forEach((button) => {
+      button.addEventListener('click', () => {
+        if (!startInput || !endInput) return;
+        const now = new Date();
+        const year = now.getFullYear();
+        const targetYear = button.dataset.range === 'previous' ? year - 1 : year;
+        startInput.value = `${targetYear}-01-01`;
+        endInput.value = `${targetYear}-12-31`;
+        filterForm.submit();
+      });
+    });
+
+    const toggleButtons = document.querySelectorAll('[data-cf-toggle]');
+    const detailRows = document.querySelectorAll('.cf-detail-row');
+    const tableRows = document.querySelectorAll('[data-row]');
+    let expanded = null;
+
+    function setExpanded(key) {
+      expanded = expanded === key ? null : key;
+
+      toggleButtons.forEach((btn) => {
+        const isActive = btn.dataset.cfToggle === expanded;
+        btn.textContent = isActive ? '-' : '+';
+      });
+
+      tableRows.forEach((row) => {
+        row.classList.toggle('cf-row-active', row.dataset.row === expanded);
+      });
+
+      detailRows.forEach((row) => {
+        row.classList.add('hidden');
+        if (expanded && row.dataset.detail === expanded) {
+          row.classList.remove('hidden');
+        }
+      });
+    }
+
+    toggleButtons.forEach((btn) => {
+      btn.addEventListener('click', () => setExpanded(btn.dataset.cfToggle));
+    });
+
+    document.querySelectorAll('[data-phase-target]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (!filterForm || !phaseInput) return;
+        phaseInput.value = btn.dataset.phaseTarget;
+        filterForm.submit();
+      });
+    });
+
+    document.querySelectorAll('[data-section-toggle]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.sectionToggle;
+        const section = document.querySelector(`[data-section="${target}"]`);
+        if (!section) return;
+        const isHidden = section.classList.contains('hidden');
+        section.classList.toggle('hidden');
+        btn.querySelector('span').textContent = isHidden ? btn.dataset.closeLabel : btn.dataset.openLabel;
+        if (isHidden) {
+          section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    document.querySelectorAll('[data-section-close]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const target = btn.dataset.sectionClose;
+        const section = document.querySelector(`[data-section="${target}"]`);
+        if (!section) return;
+        section.classList.add('hidden');
+        document.querySelectorAll(`[data-section-toggle="${target}"]`).forEach((toggle) => {
+          const label = toggle.dataset.openLabel;
+          if (label) {
+            toggle.querySelector('span').textContent = label;
+          }
+        });
+      });
+    });
+
+    const labelsEl = document.getElementById('cashflow-chart-labels');
+    const saldoEl = document.getElementById('cashflow-chart-saldo-final');
+    const resultadoEl = document.getElementById('cashflow-chart-resultado');
+    const chartCanvas = document.getElementById('cashflowForecastChart');
+    if (labelsEl && saldoEl && resultadoEl && chartCanvas && typeof Chart !== 'undefined') {
+      const labels = JSON.parse(labelsEl.textContent);
+      const saldoValues = JSON.parse(saldoEl.textContent);
+      const resultadoValues = JSON.parse(resultadoEl.textContent);
+
+      new Chart(chartCanvas, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Saldo Final',
+              data: saldoValues,
+              borderColor: '#8B5CF6',
+              backgroundColor: 'rgba(139, 92, 246, 0.15)',
+              tension: 0.4,
+              fill: true,
+            },
+            {
+              label: 'Resultado do Período',
+              data: resultadoValues,
+              borderColor: '#ef4444',
+              backgroundColor: 'rgba(239, 68, 68, 0.12)',
+              tension: 0.35,
+              fill: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom'
+            }
+          },
+          scales: {
+            y: {
+              ticks: {
+                callback: function(value) {
+                  return `R$ ${Number(value).toLocaleString('pt-BR')}`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

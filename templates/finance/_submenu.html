@@ -1,0 +1,22 @@
+{% with current=request.resolver_match.url_name %}
+<div class="mt-4 flex flex-wrap gap-3">
+  <a
+    href="{% url 'finance:transaction_list' %}"
+    class="px-6 py-3 rounded-lg font-semibold border transition-colors {% if current == 'transaction_list' %}bg-primary text-white border-transparent hover:border-purple-600 hover:bg-purple-700{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-purple-600{% endif %}"
+  >
+    <i class="fas fa-plus-circle mr-2"></i>Lançamento
+  </a>
+  <a
+    href="{% url 'finance:category_list' %}"
+    class="px-6 py-3 rounded-lg font-semibold border transition-colors {% if current == 'category_list' %}bg-primary text-white border-transparent hover:border-purple-600 hover:bg-purple-700{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-purple-600{% endif %}"
+  >
+    <i class="fas fa-tags mr-2"></i>Categoria
+  </a>
+  <a
+    href="{% url 'finance:account_list' %}"
+    class="px-6 py-3 rounded-lg font-semibold border transition-colors {% if current == 'account_list' %}bg-primary text-white border-transparent hover:border-purple-600 hover:bg-purple-700{% else %}bg-white text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-purple-600{% endif %}"
+  >
+    <i class="fas fa-university mr-2"></i>Contas Comerciais
+  </a>
+</div>
+{% endwith %}

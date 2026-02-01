@@ -1,0 +1,167 @@
+{% extends "base/base.html" %}
+
+{% block title %}Meu Perfil - EsferaFLOW{% endblock %}
+
+{% block page_title %}Meu Perfil{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+  <!-- Profile Header -->
+  <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mb-6">
+    <div class="flex items-center space-x-6">
+      <div class="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-purple-700 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+        {{ user.username|slice:":1"|upper }}
+      </div>
+      <div>
+        <h2 class="text-3xl font-bold text-gray-800">{{ user.first_name }} {{ user.last_name }}</h2>
+        <p class="text-gray-500 mt-1">{{ user.email }}</p>
+        <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full bg-primary text-white">
+          {{ user.get_role_display }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Information Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <!-- Account Info Card -->
+    <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Conta Criada</h3>
+        <i class="fas fa-calendar text-primary"></i>
+      </div>
+      <p class="text-lg font-bold text-gray-800">{{ user.date_joined|date:"d/m/Y" }}</p>
+    </div>
+
+    <!-- Last Login Card -->
+    <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Último Acesso</h3>
+        <i class="fas fa-clock text-primary"></i>
+      </div>
+      <p class="text-lg font-bold text-gray-800">
+        {% if user.last_login %}
+          {{ user.last_login|date:"d/m/Y H:i" }}
+        {% else %}
+          Primeiro acesso
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- User Status Card -->
+    <div class="bg-white rounded-xl shadow-md border border-slate-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Status</h3>
+        <i class="fas fa-check-circle text-green-500"></i>
+      </div>
+      <p class="text-lg font-bold text-green-600">Ativo</p>
+    </div>
+  </div>
+
+  <!-- Edit Profile Form -->
+  <div class="bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+    <div class="flex items-center justify-between mb-6">
+      <h3 class="text-2xl font-bold text-gray-800">Informações Pessoais</h3>
+      <i class="fas fa-user-edit text-primary text-2xl"></i>
+    </div>
+
+    <form method="post" class="space-y-6">
+      {% csrf_token %}
+
+      <!-- Username Field -->
+      <div>
+        <label for="{{ form.username.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+          {{ form.username.label }}
+        </label>
+        {{ form.username }}
+        {% if form.username.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ form.username.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- First Name Field -->
+      <div>
+        <label for="{{ form.first_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+          {{ form.first_name.label }}
+        </label>
+        {{ form.first_name }}
+        {% if form.first_name.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ form.first_name.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Last Name Field -->
+      <div>
+        <label for="{{ form.last_name.id_for_label }}" class="block text-sm font-semibold text-gray-700 mb-2">
+          {{ form.last_name.label }}
+        </label>
+        {{ form.last_name }}
+        {% if form.last_name.errors %}
+          <p class="mt-1 text-sm text-red-600">{{ form.last_name.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      <!-- Read-Only Fields -->
+      <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+        <h4 class="text-sm font-semibold text-gray-700 mb-3">Informações Fixas</h4>
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Email:</span>
+            <span class="text-sm font-medium text-gray-800">{{ user.email }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-sm text-gray-600">Nível de Acesso:</span>
+            <span class="text-sm font-medium text-gray-800">{{ user.get_role_display }}</span>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-gray-500">
+          <i class="fas fa-info-circle mr-1"></i>
+          Email e nível de acesso não podem ser alterados. Entre em contato com o administrador se necessário.
+        </p>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+        <a
+          href="{% url 'dashboard' %}"
+          class="px-6 py-3 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Voltar
+        </a>
+        <button
+          type="submit"
+          class="px-8 py-3 bg-primary text-white rounded-lg hover:bg-purple-700 transition-colors font-medium shadow-md"
+        >
+          <i class="fas fa-save mr-2"></i>
+          Salvar Alterações
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Additional Settings (Future) -->
+  <div class="bg-gradient-to-r from-slate-50 to-slate-100 rounded-xl border border-slate-200 p-6 mt-6">
+    <div class="flex items-start space-x-4">
+      <i class="fas fa-cog text-slate-400 text-2xl mt-1"></i>
+      <div>
+        <h4 class="text-lg font-semibold text-slate-700 mb-2">Configurações Adicionais</h4>
+        <p class="text-sm text-slate-600 mb-4">
+          Recursos como alteração de senha, notificações e preferências estarão disponíveis em breve.
+        </p>
+        <div class="flex space-x-3">
+          <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-slate-600 bg-white rounded-full border border-slate-300">
+            <i class="fas fa-lock mr-1"></i> Alterar Senha
+          </span>
+          <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-slate-600 bg-white rounded-full border border-slate-300">
+            <i class="fas fa-bell mr-1"></i> Notificações
+          </span>
+          <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-slate-600 bg-white rounded-full border border-slate-300">
+            <i class="fas fa-palette mr-1"></i> Tema
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

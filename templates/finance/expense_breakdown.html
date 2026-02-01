@@ -1,0 +1,363 @@
+{% extends 'base/base.html' %}
+{% load finance_extras %}
+{% block title %}Breakdown de Despesas - EsferaFlow{% endblock %}
+{% block page_title %}Breakdown de Despesas{% endblock %}
+
+{% block extra_head %}
+<style>
+  #expense-breakdown-page .eb-card {
+    border-radius: 18px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+  }
+  #expense-breakdown-page .eb-card-header {
+    border-bottom: 1px solid #eef2f6;
+  }
+  #expense-breakdown-page .eb-card-accent {
+    border-left: 5px solid #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #ffffff 60%);
+  }
+  #expense-breakdown-page .eb-progress-bar {
+    height: 10px;
+    background: #f1f5f9;
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+  #expense-breakdown-page .eb-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+    transition: width 0.5s ease;
+  }
+  #expense-breakdown-page .eb-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  #expense-breakdown-page .eb-badge-direto {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+  #expense-breakdown-page .eb-badge-indireto {
+    background: #fef3c7;
+    color: #92400e;
+  }
+  #expense-breakdown-page .eb-badge-fixo {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+  #expense-breakdown-page .eb-badge-variavel {
+    background: #e0e7ff;
+    color: #3730a3;
+  }
+  #expense-breakdown-page .eb-badge-administrativo {
+    background: #e9d5ff;
+    color: #6b21a8;
+  }
+  #expense-breakdown-page .eb-badge-operacional {
+    background: #d1fae5;
+    color: #065f46;
+  }
+  #expense-breakdown-page .eb-badge-financeiro {
+    background: #fce7f3;
+    color: #831843;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="expense-breakdown-page" class="space-y-8">
+  <!-- Header -->
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h2 class="text-3xl font-semibold text-slate-900">Breakdown de Despesas</h2>
+      <p class="text-sm text-slate-500 mt-1">Análise detalhada por tipo de despesa</p>
+    </div>
+    <a
+      href="{% url 'finance:transaction_list' %}"
+      class="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow hover:bg-purple-700"
+    >
+      <i class="fas fa-list"></i>
+      Ver Todas as Transações
+    </a>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+    <!-- Total de Despesas -->
+    <div class="eb-card eb-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total de Despesas</p>
+          <p class="mt-2 text-2xl font-semibold text-red-600">R$ {{ total_despesas|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">No período selecionado</p>
+        </div>
+        <div class="rounded-full bg-red-100 p-2 text-red-700">
+          <i class="fas fa-coins"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Despesas Recorrentes -->
+    <div class="eb-card eb-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Despesas Recorrentes</p>
+          <p class="mt-2 text-2xl font-semibold text-orange-600">R$ {{ recurring_expenses.total|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">{{ recurring_expenses.count }} transaç{{ recurring_expenses.count|pluralize:"ão,ões" }}</p>
+        </div>
+        <div class="rounded-full bg-orange-100 p-2 text-orange-700">
+          <i class="fas fa-rotate"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Despesas Únicas -->
+    <div class="eb-card eb-card-accent p-5">
+      <div class="flex items-start justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Despesas Únicas</p>
+          <p class="mt-2 text-2xl font-semibold text-slate-700">R$ {{ total_despesas|add:recurring_expenses.total|add:"-"|brl }}</p>
+          <p class="mt-1 text-xs text-slate-400">Não recorrentes</p>
+        </div>
+        <div class="rounded-full bg-slate-100 p-2 text-slate-700">
+          <i class="fas fa-circle-dot"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="eb-card">
+    <div class="eb-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-slate-900">Período e Filtros</h3>
+      <p class="text-xs text-slate-500 mt-1">Defina o intervalo para atualizar o breakdown</p>
+    </div>
+    <div class="px-6 py-6">
+      <form method="get" class="grid grid-cols-1 gap-4 md:grid-cols-5">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Data início</label>
+          <input
+            type="date"
+            name="start"
+            value="{{ start_date|date:'Y-m-d' }}"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Data fim</label>
+          <input
+            type="date"
+            name="end"
+            value="{{ end_date|date:'Y-m-d' }}"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Conta</label>
+          <select
+            name="account"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          >
+            <option value="">Todas</option>
+            {% for account in accounts %}
+            <option value="{{ account.id }}" {% if account.id|stringformat:"s" == selected_account %}selected{% endif %}>
+              {{ account.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 mb-1">Categoria</label>
+          <select
+            name="category"
+            class="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-purple-500 focus:outline-none"
+          >
+            <option value="">Todas</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}" {% if category.id|stringformat:"s" == selected_category %}selected{% endif %}>
+              {{ category.nome }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="flex items-end gap-2">
+          <button
+            type="submit"
+            class="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-white shadow hover:bg-purple-700"
+          >
+            <i class="fas fa-sync mr-2"></i>Atualizar
+          </button>
+          <a
+            href="{% url 'finance:expense_breakdown' %}"
+            class="rounded-full border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50"
+          >
+            Limpar
+          </a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Breakdown por Tipo -->
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-900 mb-1">Breakdown por Tipo de Despesa</h2>
+    <p class="text-sm text-slate-500">Distribuição das despesas classificadas por tipo</p>
+  </div>
+
+  <div class="grid grid-cols-1 gap-6">
+    {% for expense_type_code, expense_type_label in expense_types %}
+      {% with item=breakdown|get_item:expense_type_code %}
+      <div class="eb-card overflow-hidden">
+        <div class="px-6 py-5 flex flex-wrap items-center justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <span class="eb-badge eb-badge-{{ expense_type_code }}">
+              {{ item.label }}
+            </span>
+            <div>
+              <p class="text-sm text-slate-500">Total</p>
+              <p class="text-2xl font-semibold text-slate-900">R$ {{ item.total|brl }}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-slate-500">Transações</p>
+            <p class="text-2xl font-semibold text-slate-700">{{ item.count }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-slate-500">% do Total</p>
+            <p class="text-2xl font-semibold text-purple-700">{{ item.percentage|floatformat:1 }}%</p>
+          </div>
+        </div>
+        <div class="px-6 pb-5">
+          <div class="eb-progress-bar">
+            <div class="eb-progress-fill" style="width: {{ item.percentage }}%;"></div>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+    {% endfor %}
+  </div>
+
+  <!-- Recorrência por Período -->
+  <div>
+    <h2 class="text-2xl font-semibold text-slate-900 mb-1">Despesas Recorrentes por Período</h2>
+    <p class="text-sm text-slate-500">Distribuição das despesas recorrentes por frequência</p>
+  </div>
+
+  <div class="eb-card overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-purple-700 text-white">
+          <tr>
+            <th class="px-6 py-3 text-left">Período de Recorrência</th>
+            <th class="px-6 py-3 text-right">Quantidade</th>
+            <th class="px-6 py-3 text-right">Valor Total</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200">
+          {% if recurring_expenses.breakdown_by_period %}
+            {% for item in recurring_expenses.breakdown_by_period %}
+            <tr class="hover:bg-slate-50">
+              <td class="px-6 py-4 font-medium text-slate-900">{{ item.label }}</td>
+              <td class="px-6 py-4 text-right text-slate-700">{{ item.count }}</td>
+              <td class="px-6 py-4 text-right font-semibold text-red-600">R$ {{ item.total|brl }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="3" class="px-6 py-8 text-center text-slate-500">
+                Nenhuma despesa recorrente encontrada no período
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Gráfico de Pizza -->
+  <div class="eb-card">
+    <div class="eb-card-header px-6 py-4">
+      <h3 class="text-lg font-semibold text-slate-900">Distribuição Visual</h3>
+      <p class="text-xs text-slate-500 mt-1">Proporção de cada tipo de despesa</p>
+    </div>
+    <div class="px-6 py-6">
+      <canvas id="expenseBreakdownChart" height="300"></canvas>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  (function () {
+    const chartCanvas = document.getElementById('expenseBreakdownChart');
+    if (chartCanvas && typeof Chart !== 'undefined') {
+      const labels = [
+        {% for expense_type_code, expense_type_label in expense_types %}
+          '{{ breakdown|get_item:expense_type_code|get_item:"label" }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ];
+      const data = [
+        {% for expense_type_code, expense_type_label in expense_types %}
+          {{ breakdown|get_item:expense_type_code|get_item:"total"|default:0 }}{% if not forloop.last %},{% endif %}
+        {% endfor %}
+      ];
+      const colors = [
+        '#ef4444', // direto - red
+        '#f59e0b', // indireto - amber
+        '#3b82f6', // fixo - blue
+        '#6366f1', // variavel - indigo
+        '#a855f7', // administrativo - purple
+        '#10b981', // operacional - green
+        '#ec4899', // financeiro - pink
+      ];
+
+      new Chart(chartCanvas, {
+        type: 'pie',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                padding: 15,
+                font: {
+                  size: 13
+                }
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.label || '';
+                  const value = context.parsed || 0;
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                  return `${label}: R$ ${value.toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${percentage}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+  })();
+</script>
+{% endblock %}

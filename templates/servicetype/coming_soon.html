@@ -1,0 +1,23 @@
+{% extends 'base/base.html' %}
+{% block title %}Em breve - EsferaFlow{% endblock %}
+{% block page_title %}Em breve{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="bg-white rounded-2xl shadow-xl p-8 border border-gray-100 text-center">
+    <div class="mx-auto mb-4 h-14 w-14 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center">
+      <i class="fas fa-hourglass-half text-2xl"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-gray-800">Funcionalidade em breve</h2>
+    <p class="text-gray-600 mt-2">
+      Itens de custo, composição e análise de margem voltarão em março.
+    </p>
+    <a
+      href="{% url 'servicetype:list' %}"
+      class="inline-flex items-center mt-6 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+    >
+      <i class="fas fa-arrow-left mr-2"></i>Voltar para Tipos de Serviço
+    </a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends 'base/base.html' %}
+{% block title %}Faturamento - OS encerradas{% endblock %}
+{% block page_title %}Faturamento{% endblock %}
+
+{% block content %}
+{% include 'finance/partials/billing_header.html' %}
+{% include 'finance/partials/billing_tabs.html' %}
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+  {% if orders %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Código</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Cliente</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Serviço</th>
+          <th class="text-right py-4 px-6 text-sm font-semibold text-gray-700">Valor</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-gray-700">Encerrada em</th>
+          <th class="text-center py-4 px-6 text-sm font-semibold text-gray-700">Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr class="border-t hover:bg-gray-50 transition-colors">
+          <td class="py-4 px-6 text-sm text-gray-700">{{ order.code }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ order.client.full_name|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">{{ order.service_type.name|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700 text-right">R$ {{ order.labor_cost|default:"0.00" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">
+            {% if order.closed_on %}
+              {{ order.closed_on|date:"d/m/Y" }}
+            {% elif order.finished_at %}
+              {{ order.finished_at|date:"d/m/Y" }}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="py-4 px-6 text-center">
+            <a href="{% url 'workorder:detail' order.id %}" class="text-gray-600 hover:text-gray-800" title="Ver OS">
+              <i class="fas fa-eye"></i>
+            </a>
+            <a
+              href="{% url 'finance:workorder_payment' order.id %}"
+              class="ml-3 inline-flex items-center {% if order.finished_at or order.closed_on %}text-emerald-600 hover:text-emerald-800{% else %}text-gray-300 hover:text-gray-400{% endif %}"
+              title="{% if order.finished_at or order.closed_on %}Gerar pagamento{% else %}OS sem data de termino{% endif %}"
+            >
+              <i class="fas fa-credit-card"></i>
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if is_paginated %}
+  <div class="px-6 py-4 border-t flex justify-between items-center">
+    <span class="text-sm text-gray-600">
+      Mostrando {{ orders|length }} de {{ page_obj.paginator.count }} OS
+      (Pagina {{ page_obj.number }} de {{ page_obj.paginator.num_pages }})
+    </span>
+    <div class="space-x-2">
+      {% if page_obj.has_previous %}
+      <a href="?page=1" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+        <i class="fas fa-angle-double-left"></i>
+      </a>
+      <a href="?page={{ page_obj.previous_page_number }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+        <i class="fas fa-angle-left"></i> Anterior
+      </a>
+      {% endif %}
+
+      <span class="px-4 py-2 bg-primary text-white rounded">
+        {{ page_obj.number }}
+      </span>
+
+      {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+        Proxima <i class="fas fa-angle-right"></i>
+      </a>
+      <a href="?page={{ page_obj.paginator.num_pages }}" class="px-4 py-2 bg-gray-200 rounded hover:bg-gray-300 transition-colors">
+        <i class="fas fa-angle-double-right"></i>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+  {% else %}
+  <div class="text-center py-12 text-gray-500">
+    <i class="fas fa-file-invoice text-5xl mb-4"></i>
+    <p class="text-lg font-semibold mb-2">Nenhuma OS pendente de NF</p>
+    <p class="text-sm">Todas as OS encerradas possuem NF emitida.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

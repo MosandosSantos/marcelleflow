@@ -1,0 +1,181 @@
+{% extends 'base/base.html' %}
+{% block title %}Excluir Tipo de Serviço - EsferaFlow{% endblock %}
+{% block page_title %}Excluir Tipo de Serviço{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <!-- Card de Confirmação -->
+    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+        <!-- Header com Ícone de Alerta -->
+        <div class="bg-red-500 px-6 py-4">
+            <div class="flex items-center">
+                <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center">
+                    <i class="fas fa-exclamation-triangle text-3xl text-red-500"></i>
+                </div>
+                <div class="ml-4">
+                    <h2 class="text-xl font-bold text-white">Confirmar Exclusão</h2>
+                    <p class="text-red-100 text-sm">Esta ação não pode ser desfeita</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Informações do Tipo de Serviço -->
+        <div class="p-6 border-b">
+            <p class="text-gray-700 mb-4">
+                Você está prestes a excluir o seguinte tipo de serviço:
+            </p>
+
+            <div class="bg-gray-50 rounded-lg p-6 space-y-4">
+                <div class="flex items-center">
+                    <div class="w-16 h-16 rounded-full bg-primary flex items-center justify-center text-white text-2xl font-bold">
+                        {{ service_type.name|slice:":1"|upper }}
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-xl font-bold text-gray-800">{{ service_type.name }}</h3>
+                        {% if service_type.is_active %}
+                        <span class="inline-block mt-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                            <i class="fas fa-check-circle mr-1"></i>Ativo
+                        </span>
+                        {% else %}
+                        <span class="inline-block mt-1 px-2 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                            <i class="fas fa-times-circle mr-1"></i>Inativo
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if service_type.description %}
+                <div class="pt-4 border-t">
+                    <p class="text-sm text-gray-600 mb-1">Descrição:</p>
+                    <p class="text-gray-800">{{ service_type.description|truncatewords:20 }}</p>
+                </div>
+                {% endif %}
+
+                <div class="grid grid-cols-2 gap-4 pt-4 border-t">
+                    {% if service_type.duracao_estimada %}
+                    <div>
+                        <p class="text-sm text-gray-600">Duração Estimada</p>
+                        <p class="font-semibold text-gray-800">{{ service_type.duracao_estimada }} minutos</p>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <p class="text-sm text-gray-600">Cadastrado em</p>
+                        <p class="font-semibold text-gray-800">{{ service_type.created_at|date:"d/m/Y" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Avisos -->
+        <div class="p-6 bg-yellow-50 border-b border-yellow-100">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-info-circle text-yellow-600 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-yellow-800">Atenção</h3>
+                    <div class="mt-2 text-sm text-yellow-700">
+                        <ul class="list-disc pl-5 space-y-1">
+                            <li>Todos os dados do tipo de serviço serão removidos permanentemente</li>
+                            <li>Prestadores associados a este tipo de serviço perderão essa vinculação</li>
+                            <li>As ordens de serviço existentes manterão a referência histórica</li>
+                            <li>Esta ação não pode ser desfeita</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verificação de Prestadores e Ordens -->
+        {% if providers_count > 0 or work_orders_count > 0 %}
+        <div class="p-6 bg-orange-50 border-b border-orange-100">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-circle text-orange-600 text-xl"></i>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-orange-800">Este tipo de serviço está em uso</h3>
+                    <div class="mt-2 text-sm text-orange-700">
+                        {% if providers_count > 0 %}
+                        <p class="mb-2">
+                            <i class="fas fa-user-tie mr-1"></i>
+                            <strong>{{ providers_count }}</strong> prestador(es) oferece(m) este serviço
+                        </p>
+                        {% endif %}
+                        {% if work_orders_count > 0 %}
+                        <p>
+                            <i class="fas fa-clipboard-list mr-1"></i>
+                            <strong>{{ work_orders_count }}</strong> ordem(ns) de serviço cadastrada(s)
+                        </p>
+                        {% endif %}
+                        <p class="mt-2">Certifique-se de que deseja realmente excluir este tipo de serviço.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Formulário de Confirmação -->
+        <div class="p-6">
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-6">
+                    <label class="flex items-center">
+                        <input
+                            type="checkbox"
+                            id="confirm-delete"
+                            required
+                            class="w-5 h-5 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                        >
+                        <span class="ml-3 text-gray-700">
+                            Confirmo que entendo que esta ação é <strong>permanente e irreversível</strong>
+                        </span>
+                    </label>
+                </div>
+
+                <!-- Botões -->
+                <div class="flex items-center justify-end gap-4">
+                    <a
+                        href="{% url 'servicetype:list' %}"
+                        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                    >
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </a>
+                    <button
+                        type="submit"
+                        class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        id="delete-button"
+                        disabled
+                    >
+                        <i class="fas fa-trash-alt mr-2"></i>Excluir Tipo de Serviço
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Card Informativo -->
+    <div class="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex">
+            <div class="flex-shrink-0">
+                <i class="fas fa-lightbulb text-blue-600 text-xl"></i>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-sm font-medium text-blue-800">Alternativa</h3>
+                <div class="mt-1 text-sm text-blue-700">
+                    <p>Se você deseja apenas desativar temporariamente este tipo de serviço, considere marcá-lo como inativo ao invés de excluí-lo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Habilitar botão de exclusão apenas quando checkbox for marcado
+    document.getElementById('confirm-delete').addEventListener('change', function() {
+        document.getElementById('delete-button').disabled = !this.checked;
+    });
+</script>
+
+{% endblock %}

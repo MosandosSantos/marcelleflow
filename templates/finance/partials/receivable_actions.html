@@ -1,0 +1,15 @@
+﻿{% if transaction.is_installment and not transaction.invoice_number %}
+<a href="{% url 'finance:installment_nf' transaction.pk %}" class="text-indigo-600 hover:text-indigo-800" title="Emitir NF">
+  <i class="fas fa-file-invoice"></i>
+</a>
+{% endif %}
+{% if not transaction.is_projection %}
+<a href="{% url 'finance:transaction_mark_completed' transaction.pk %}?next={% url 'finance:accounts_receivable' %}" class="ml-3 text-emerald-600 hover:text-emerald-800" title="Registrar pagamento">
+  <i class="fas fa-check-circle"></i>
+</a>
+{% endif %}
+{% if not transaction.is_installment %}
+<a href="{% url 'finance:transaction_update' transaction.pk %}" class="ml-3 text-blue-600 hover:text-blue-800" title="Editar">
+  <i class="fas fa-edit"></i>
+</a>
+{% endif %}

@@ -1,0 +1,189 @@
+{% extends 'base/base.html' %}
+{% block title %}Serviço X - EsferaWork{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="px-6 py-6 bg-slate-50 min-h-screen">
+    <div class="max-w-6xl mx-auto space-y-6">
+        <header class="flex items-center justify-between">
+            <div>
+                <p class="text-xs uppercase tracking-[0.25em] text-slate-500">Serviço X · Financeiro</p>
+                <h1 class="text-3xl font-bold text-slate-900">Precificação criativa e BI de custos</h1>
+                <p class="text-sm text-slate-500 mt-2">Visualize estrutura de custos, simulações e alertas sem sair do menu Financeiro.</p>
+            </div>
+            <div class="space-x-2">
+                <button class="px-4 py-2 rounded-full border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-100">Exportar PDF</button>
+                <button class="px-4 py-2 rounded-full bg-primary text-white font-semibold shadow-lg hover:bg-primary-dark">Atualizar dados</button>
+            </div>
+        </header>
+
+        <section id="simulador" class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {% for card in price_composition %}
+                <article class="rounded-2xl" style="background: linear-gradient(135deg, {{ card.color }} 0%, rgba(124, 58, 237, 0.7) 80%); padding: 1.5rem; color: #fff;">
+                    <p class="text-xs uppercase tracking-[0.4em] mb-2">{{ card.label }}</p>
+                    <div class="text-3xl font-bold">{{ card.price_display }}</div>
+                    <div class="flex justify-between mt-3 text-sm opacity-80">
+                        <span>Margem</span>
+                        <span>{{ card.margin_display }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm mt-1 opacity-70">
+                        <span>Custo direto</span>
+                        <span>{{ card.direct_cost_display }}</span>
+                    </div>
+                    <div class="flex justify-between text-xs mt-3">
+                        <span>{{ card.orders }} ordens</span>
+                        <span>Trend {{ card.trend|floatformat:1 }}%</span>
+                    </div>
+                </article>
+            {% endfor %}
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="bg-white rounded-2xl shadow p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.3em]">Alertas de SLA</h2>
+                    <span class="text-xs text-slate-400">foco operacional</span>
+                </div>
+                {% if risk_alerts %}
+                    {% for alert in risk_alerts %}
+                        <div class="border border-slate-200 rounded-xl p-3 bg-slate-50 flex flex-col">
+                            <div class="flex items-center justify-between text-xs text-slate-500">
+                                <span class="font-semibold text-slate-900">{{ alert.code }}</span>
+                                <span class="text-emerald-500">{{ alert.hours }}h</span>
+                            </div>
+                            <p class="text-sm text-slate-600 mt-1">{{ alert.client }} · {{ alert.service }}</p>
+                            <div class="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                                <span class="inline-flex items-center gap-1">
+                                    <span class="w-2 h-2 rounded-full" style="background: {{ alert.sla_color }};"></span>
+                                    {{ alert.sla_status|capfirst }}
+                                </span>
+                                <span>{{ alert.provider }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="text-sm text-slate-500">Nenhum alerta crítico no momento.</p>
+                {% endif %}
+            </div>
+
+            <div class="lg:col-span-2 bg-white rounded-2xl shadow border border-slate-200 p-5">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-sm font-semibold uppercase tracking-[0.3em] text-slate-500">DRE Gerencial</h2>
+                    {% if dre_alert_flag %}
+                        <span class="px-3 py-1 rounded-full bg-red-50 text-red-600 text-xs font-semibold">Margem negativa</span>
+                    {% else %}
+                        <span class="px-3 py-1 rounded-full bg-emerald-50 text-emerald-600 text-xs font-semibold">Margem saudável</span>
+                    {% endif %}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                    <div class="dre-chip">
+                        <p class="label">Receita</p>
+                        <p class="value">R$ {{ dre_summary.revenue|floatformat:2 }}</p>
+                    </div>
+                    <div class="dre-chip">
+                        <p class="label">Despesa</p>
+                        <p class="value">R$ {{ dre_summary.expense|floatformat:2 }}</p>
+                    </div>
+                    <div class="dre-chip">
+                        <p class="label">Resultado</p>
+                        <p class="value">R$ {{ dre_summary.net|floatformat:2 }}</p>
+                        <p class="text-xs text-slate-500 mt-1">Margem {{ dre_summary.margin_pct|floatformat:1 }}%</p>
+                    </div>
+                </div>
+                <div class="mt-6 h-60">
+                    <canvas id="dreChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <article class="bg-white rounded-2xl shadow p-5">
+                <h3 class="text-xs uppercase tracking-[0.4em] text-slate-500">Estrutura de Custos</h3>
+                <ul class="mt-3 space-y-2 text-sm text-slate-600">
+                    <li><strong>Custos Operacionais:</strong> Custos diretos e indiretos, rateados por serviço.</li>
+                    <li><strong>Despesas Administrativas:</strong> Overhead fixo alocado por centro de custo.</li>
+                    <li><strong>Impostos &amp; Taxas:</strong> Perfis fiscais com ISS, federais e taxas financeiras.</li>
+                    <li><strong>Regras de Rateio:</strong> Percentuais configuráveis por grupo de serviço.</li>
+                </ul>
+            </article>
+            <article class="bg-white rounded-2xl shadow p-5">
+                <h3 class="text-xs uppercase tracking-[0.4em] text-slate-500">Serviços</h3>
+                <ul class="mt-3 space-y-2 text-sm text-slate-600">
+                    <li><strong>Cadastro de Serviços:</strong> Catálogo gerenciado via tipologia.</li>
+                    <li><strong>Precificação:</strong> Margem alvo/mínima aplicadas automaticamente.</li>
+                    <li><strong>Simulador de Preço:</strong> Ajuste de margem, custo e impostos para precificar.</li>
+                </ul>
+            </article>
+            <article class="bg-white rounded-2xl shadow p-5">
+                <h3 class="text-xs uppercase tracking-[0.4em] text-slate-500">Fluxo &amp; BI</h3>
+                <p class="mt-3 text-sm text-slate-600">Integração direta com o fluxo financeiro, alimentada pelos dashboards de DRE e modelo de precificação técnica que criamos.</p>
+            </article>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const dreLabels = {{ dre_monthly_labels|safe }};
+    const dreData = {{ dre_monthly_data|safe }};
+    const dreChartEl = document.getElementById('dreChart');
+    if (!dreChartEl) return;
+    const ctx = dreChartEl.getContext('2d');
+    const gradient = ctx.createLinearGradient(0, 0, 0, 240);
+    gradient.addColorStop(0, 'rgba(37, 99, 235, 0.5)');
+    gradient.addColorStop(1, 'rgba(37, 99, 235, 0.05)');
+
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: dreLabels,
+            datasets: [{
+                label: 'Resultado Líquido',
+                data: dreData,
+                borderColor: '#2563EB',
+                backgroundColor: gradient,
+                fill: true,
+                tension: 0.3,
+                pointRadius: 3,
+                pointHoverRadius: 6,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: '#fff',
+                    titleColor: '#0F172A',
+                    bodyColor: '#0F172A',
+                    borderColor: '#E5E7EB',
+                    borderWidth: 1,
+                    padding: 10,
+                    cornerRadius: 8,
+                    callbacks: {
+                        label: ctx => `R$ ${ctx.parsed.y.toFixed(2)}`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#475569' }
+                },
+                y: {
+                    grid: { color: '#F1F5F9' },
+                    ticks: { color: '#475569' }
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

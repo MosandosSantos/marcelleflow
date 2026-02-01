@@ -1,0 +1,159 @@
+{% extends 'base/base.html' %}
+{% block title %}Excluir Operadora - EsferaFlow{% endblock %}
+{% block page_title %}Excluir Operadora{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <!-- Cabeçalho -->
+    <div class="mb-6 flex justify-between items-center">
+        <h2 class="text-2xl font-bold text-gray-800">Confirmar Exclusão</h2>
+        <a href="{% url 'servicesoperators:detail' service_operator.id %}" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+            <i class="fas fa-arrow-left mr-2"></i>Voltar
+        </a>
+    </div>
+
+    <!-- Aviso de Exclusão -->
+    <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-triangle text-red-500 text-2xl mr-4 mt-1"></i>
+            <div>
+                <h3 class="text-lg font-bold text-red-800 mb-2">Atenção!</h3>
+                <p class="text-red-700">
+                    Você está prestes a excluir a operadora <strong>{{ service_operator.name }}</strong>.
+                    Esta ação não pode ser desfeita.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Informações da Operadora -->
+    <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">
+            <i class="fas fa-building text-primary mr-2"></i>Informações da Operadora
+        </h3>
+
+        <div class="space-y-3">
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Razão Social:</span>
+                <span class="text-gray-800">{{ service_operator.name }}</span>
+            </div>
+
+            {% if service_operator.trade_name %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Nome Fantasia:</span>
+                <span class="text-gray-800">{{ service_operator.trade_name }}</span>
+            </div>
+            {% endif %}
+
+            {% if service_operator.cnpj %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">CNPJ:</span>
+                <span class="text-gray-800">{{ service_operator.cnpj }}</span>
+            </div>
+            {% endif %}
+
+            {% if service_operator.responsible_name %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Responsável:</span>
+                <span class="text-gray-800">{{ service_operator.responsible_name }}{% if service_operator.responsible_role %} ({{ service_operator.responsible_role }}){% endif %}</span>
+            </div>
+            {% endif %}
+
+            {% if service_operator.email %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">E-mail:</span>
+                <span class="text-gray-800">{{ service_operator.email }}</span>
+            </div>
+            {% endif %}
+
+            {% if service_operator.phone %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Telefone:</span>
+                <span class="text-gray-800">{{ service_operator.phone }}</span>
+            </div>
+            {% endif %}
+
+            {% if service_operator.city or service_operator.state %}
+            <div class="flex justify-between py-2 border-b">
+                <span class="font-semibold text-gray-700">Localização:</span>
+                <span class="text-gray-800">
+                    {% if service_operator.city %}{{ service_operator.city }}{% endif %}{% if service_operator.state %}/{{ service_operator.state }}{% endif %}
+                </span>
+            </div>
+            {% endif %}
+
+            <div class="flex justify-between py-2">
+                <span class="font-semibold text-gray-700">Status:</span>
+                <span>
+                    {% if service_operator.is_active %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
+                        <i class="fas fa-check-circle mr-1"></i>Ativa
+                    </span>
+                    {% else %}
+                    <span class="px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">
+                        <i class="fas fa-times-circle mr-1"></i>Inativa
+                    </span>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Avisos sobre Ordens de Serviço -->
+    {% if work_orders_count > 0 %}
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-exclamation-circle text-yellow-600 text-2xl mr-4 mt-1"></i>
+            <div>
+                <h3 class="text-lg font-bold text-yellow-800 mb-2">Ordens de Serviço Associadas</h3>
+                <p class="text-yellow-700">
+                    Esta operadora possui <strong>{{ work_orders_count }}</strong> ordem(ns) de serviço associada(s).
+                    Ao excluir esta operadora, todas as ordens de serviço associadas ficarão sem operadora.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-6 mb-6">
+        <div class="flex items-start">
+            <i class="fas fa-info-circle text-blue-600 text-2xl mr-4 mt-1"></i>
+            <div>
+                <h3 class="text-lg font-bold text-blue-800 mb-2">Nenhuma Ordem Associada</h3>
+                <p class="text-blue-700">
+                    Esta operadora não possui ordens de serviço associadas. A exclusão pode ser realizada sem impacto em ordens de serviço.
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Formulário de Confirmação -->
+    <form method="POST" class="bg-white rounded-xl shadow-md p-6">
+        {% csrf_token %}
+
+        <div class="mb-6">
+            <p class="text-gray-700 text-center text-lg">
+                Tem certeza que deseja excluir a operadora
+                <strong class="text-red-600">{{ service_operator.name }}</strong>?
+            </p>
+        </div>
+
+        <!-- Botões de Ação -->
+        <div class="flex justify-center gap-4">
+            <a href="{% url 'servicesoperators:detail' service_operator.id %}" class="px-8 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors">
+                <i class="fas fa-times mr-2"></i>Cancelar
+            </a>
+            <button type="submit" class="px-8 py-3 bg-red-500 text-white rounded-lg font-semibold hover:bg-red-600 transition-colors">
+                <i class="fas fa-trash-alt mr-2"></i>Sim, Excluir
+            </button>
+        </div>
+    </form>
+
+    <!-- Informações Adicionais -->
+    <div class="mt-6 text-center text-sm text-gray-600">
+        <i class="fas fa-lock mr-1"></i>
+        Esta ação é permanente e não pode ser desfeita.
+    </div>
+</div>
+
+{% endblock %}

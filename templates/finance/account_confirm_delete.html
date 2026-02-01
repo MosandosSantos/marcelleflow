@@ -1,0 +1,61 @@
+{% extends 'base/base.html' %}
+{% block title %}Excluir Conta - EsferaFlow{% endblock %}
+{% block page_title %}Contas Financeiras{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <div class="mb-6 rounded-xl border border-red-100 bg-gradient-to-r from-red-50 to-white p-6 shadow-sm">
+    <div class="flex items-start gap-3">
+      <div class="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-red-100 text-red-600">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      <div>
+    <h2 class="text-xl font-bold text-gray-800">Excluir conta</h2>
+    <p class="text-sm text-red-600">Confirme a exclusão da conta financeira.</p>
+      </div>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-md p-6 border border-gray-100">
+    <div class="mb-4 rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-800">
+      <div class="flex items-start gap-3">
+        <div class="mt-0.5 flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+          <i class="fas fa-info-circle"></i>
+        </div>
+        <div>
+          <p class="font-semibold">Atenção</p>
+          <p class="text-sm">
+            Contas com movimentações não podem ser excluídas. Remova ou desvincule as transações antes.
+          </p>
+        </div>
+      </div>
+    </div>
+    <p class="text-gray-600 mb-6">Tem certeza de que deseja excluir a conta <strong>{{ object.nome }}</strong>?</p>
+
+    <form method="post" class="flex justify-end gap-3">
+      {% csrf_token %}
+      <a
+        href="{% url 'finance:account_list' %}"
+        class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+      >
+        Cancelar
+      </a>
+      {% if has_transactions %}
+      <button
+        type="button"
+        disabled
+        class="px-6 py-3 bg-red-300 text-white rounded-lg font-semibold cursor-not-allowed"
+        title="Conta com movimentacoes vinculadas"
+      >
+        Excluir
+      </button>
+      {% else %}
+      <button
+        type="submit"
+        class="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors"
+      >
+        Excluir
+      </button>
+      {% endif %}
+    </form>
+  </div>
+</div>
+{% endblock %}

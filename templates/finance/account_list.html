@@ -1,0 +1,131 @@
+{% extends 'base/base.html' %}
+{% block title %}Contas Financeiras - EsferaFlow{% endblock %}
+{% block page_title %}Contas Financeiras{% endblock %}
+{% block content %}
+<div class="mb-6">
+  <div class="flex flex-wrap justify-between items-center gap-4">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-800">Contas Financeiras</h2>
+      <p class="text-sm text-gray-500">Gerencie bancos, caixas e carteiras</p>
+    </div>
+    <a
+      href="{% url 'finance:account_create' %}"
+      class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+    >
+      <i class="fas fa-plus mr-2"></i>Nova conta
+    </a>
+  </div>
+  {% include 'finance/_submenu.html' %}
+</div>
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+  {% if accounts %}
+  <div class="overflow-x-auto">
+    <table class="w-full">
+      <thead class="bg-purple-600">
+        <tr>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Instituição</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white hidden md:table-cell">Banco</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white hidden lg:table-cell">Agência</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white hidden lg:table-cell">Conta</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Tipo</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white hidden md:table-cell">Saldo inicial</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Saldo atual</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Status</th>
+          <th class="text-left py-4 px-6 text-sm font-semibold text-white">Principal</th>
+          <th class="text-center py-4 px-6 text-sm font-semibold text-white">Acoes</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for account in accounts %}
+        <tr class="{% if account.is_primary %}bg-purple-100/60{% else %}{% cycle 'bg-white' 'bg-purple-50/40' %}{% endif %} border-t hover:bg-purple-50/70 transition-colors">
+          <td class="py-4 px-6 font-semibold text-gray-800">
+            <div>{{ account.nome }}</div>
+            <div class="mt-1 text-xs text-gray-500 md:hidden">
+              <span class="font-semibold">Banco:</span> {{ account.bank_code|default:"-" }}
+              <span class="mx-2">•</span>
+              <span class="font-semibold">Ag:</span>
+              {% if account.agencia %}
+                {{ account.agencia }}{% if account.agencia_dv %}-{{ account.agencia_dv }}{% endif %}
+              {% else %}
+                -
+              {% endif %}
+              <span class="mx-2">•</span>
+              <span class="font-semibold">Cc:</span>
+              {% if account.conta_numero %}
+                {{ account.conta_numero }}{% if account.conta_dv %}-{{ account.conta_dv }}{% endif %}
+              {% else %}
+                -
+              {% endif %}
+            </div>
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-600 hidden md:table-cell">{{ account.bank_code|default:"-" }}</td>
+          <td class="py-4 px-6 text-sm text-gray-600 hidden lg:table-cell">
+            {% if account.agencia %}
+              {{ account.agencia }}{% if account.agencia_dv %}-{{ account.agencia_dv }}{% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-600 hidden lg:table-cell">
+            {% if account.conta_numero %}
+              {{ account.conta_numero }}{% if account.conta_dv %}-{{ account.conta_dv }}{% endif %}
+            {% else %}
+              -
+            {% endif %}
+          </td>
+          <td class="py-4 px-6 text-sm text-gray-600">{{ account.get_tipo_display }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700 hidden md:table-cell">R$ {{ account.saldo_inicial|floatformat:2 }}</td>
+          <td class="py-4 px-6 text-sm text-gray-700">R$ {{ account.calcular_saldo_atual|floatformat:2 }}</td>
+          <td class="py-4 px-6">
+            {% if account.ativa %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Ativa</span>
+            {% else %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">Inativa</span>
+            {% endif %}
+          </td>
+          <td class="py-4 px-6">
+            {% if account.is_primary %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">Principal</span>
+            {% else %}
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-600">-</span>
+            {% endif %}
+          </td>
+          <td class="py-4 px-6">
+            <div class="flex items-center justify-center gap-2">
+              <a
+                href="{% url 'finance:account_update' account.id %}"
+                class="p-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                title="Editar"
+              >
+                <i class="fas fa-edit text-sm"></i>
+              </a>
+              <a
+                href="{% url 'finance:account_delete' account.id %}"
+                class="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                title="Excluir"
+              >
+                <i class="fas fa-trash-alt text-sm"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="text-center py-12 text-gray-500">
+    <i class="fas fa-wallet text-5xl mb-4"></i>
+    <p class="text-lg font-semibold mb-2">Nenhuma conta cadastrada</p>
+    <p class="text-sm">Cadastre sua primeira conta financeira.</p>
+    <a
+      href="{% url 'finance:account_create' %}"
+      class="inline-block mt-4 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors"
+    >
+      <i class="fas fa-plus mr-2"></i>Nova conta
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

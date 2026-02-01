@@ -1,0 +1,272 @@
+{% extends 'base/base.html' %}
+{% block title %}{{ title }} - EsferaFlow{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Cabecalho com gradiente -->
+    <div class="mb-8 flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                {{ title }}
+            </h2>
+            <p class="text-gray-500 mt-2">
+                <i class="fas fa-info-circle mr-1"></i>
+                {% if is_create %}
+                Preencha os dados para cadastrar um novo tipo de serviço
+                {% else %}
+                Atualize os dados do tipo de servico conforme necessário
+                {% endif %}
+            </p>
+        </div>
+        <a href="{% url 'servicetype:list' %}" class="group px-6 py-3 bg-white border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-300 shadow-md hover:shadow-lg">
+            <i class="fas fa-arrow-left mr-2 group-hover:-translate-x-1 transition-transform duration-300"></i>Voltar
+        </a>
+    </div>
+
+    <!-- Progress Steps -->
+    <div class="mb-8 bg-white rounded-2xl shadow-lg p-6">
+        <div class="flex items-center justify-center">
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                    <i class="fas fa-info-circle"></i>
+                </div>
+                <span class="ml-3 font-semibold text-gray-800">Dados Básicos</span>
+            </div>
+            <div class="w-24 h-1 mx-6 bg-gradient-to-r from-blue-500 to-green-500 rounded-full"></div>
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <span class="ml-3 font-semibold text-gray-800">Tempo</span>
+            </div>
+            <div class="w-24 h-1 mx-6 bg-gradient-to-r from-green-500 to-indigo-500 rounded-full"></div>
+            <div class="flex items-center">
+                <div class="w-12 h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                    <i class="fas fa-toggle-on"></i>
+                </div>
+                <span class="ml-3 font-semibold text-gray-800">Status</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario Principal -->
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        {% if form.errors %}
+        <div class="bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500 rounded-xl p-5 shadow-md">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-red-500 text-2xl"></i>
+                </div>
+                <div class="ml-4">
+                    <h3 class="text-lg font-bold text-red-800">Ops! Verifique os campos abaixo</h3>
+                    <ul class="mt-2 text-sm text-red-700 space-y-1">
+                        {% for field in form %}
+                            {% for error in field.errors %}
+                            <li><i class="fas fa-times mr-1"></i>{{ field.label }}: {{ error }}</li>
+                            {% endfor %}
+                        {% endfor %}
+                        {% for error in form.non_field_errors %}
+                        <li><i class="fas fa-times mr-1"></i>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Card: Informacoes Basicas -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+            <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-600 px-6 py-4">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <span class="bg-white/20 rounded-lg p-2 mr-3">
+                        <i class="fas fa-info-circle text-xl"></i>
+                    </span>
+                    Informações Básicas
+                </h3>
+                <p class="text-blue-100 text-sm mt-1 ml-12">Dados principais do tipo de serviço</p>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-tag text-blue-500 mr-2"></i>{{ form.name.label }} <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 group-focus-within:text-blue-500 transition-colors">
+                                <i class="fas fa-pen text-lg"></i>
+                            </span>
+                            <input type="text" name="name" id="id_name" value="{{ form.name.value|default:'' }}"
+                                class="w-full pl-12 pr-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-gray-800 font-medium"
+                                placeholder="Nome do tipo de servico">
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500"><i class="fas fa-info-circle mr-1"></i>Nome unico do tipo de serviço</p>
+                        {% if form.name.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.name.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-align-left text-blue-500 mr-2"></i>{{ form.description.label }}
+                        </label>
+                        <textarea name="description" id="id_description" rows="3"
+                            class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-gray-800"
+                            placeholder="Descricao do servico">{{ form.description.value|default:'' }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">Descricao detalhada do servico oferecido</p>
+                        {% if form.description.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.description.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-toolbox text-blue-500 mr-2"></i>Ferramentas Necessárias
+                        </label>
+                        <textarea name="ferramentas" id="id_ferramentas" rows="3"
+                            class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-100 transition-all duration-300 text-gray-800"
+                            placeholder="Ferramentas ou equipamentos">{{ form.ferramentas.value|default:'' }}</textarea>
+                        <p class="mt-1 text-xs text-gray-500">Liste as ferramentas ou equipamentos necessários</p>
+                        {% if form.ferramentas.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.ferramentas.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Definicoes do Servico -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+            <div class="bg-gradient-to-r from-green-500 via-emerald-500 to-teal-500 px-6 py-4">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <span class="bg-white/20 rounded-lg p-2 mr-3">
+                        <i class="fas fa-clock text-xl"></i>
+                    </span>
+                    Definições do Serviço
+                </h3>
+                <p class="text-green-100 text-sm mt-1 ml-12">Tempo estimado e valor unitário</p>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-hourglass-start text-green-500 mr-2"></i>{{ form.duracao_estimada.label }}
+                        </label>
+                        <input type="number" name="duracao_estimada" id="id_duracao_estimada" value="{{ form.duracao_estimada.value|default:'' }}"
+                            class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 text-gray-800"
+                            placeholder="Minutos">
+                        <p class="mt-1 text-xs text-gray-500">Tempo estimado (em horas)</p>
+                        {% if form.duracao_estimada.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.duracao_estimada.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-ruler-combined text-green-500 mr-2"></i>{{ form.billing_unit.label }}
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 group-focus-within:text-green-500 transition-colors">
+                                <i class="fas fa-ruler-combined text-lg"></i>
+                            </span>
+                            {{ form.billing_unit }}
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Selecione "Dia" para servi?os contratados por dia</p>
+                        {% if form.billing_unit.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.billing_unit.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-hashtag text-green-500 mr-2"></i>{{ form.default_quantity.label }}
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-gray-400 group-focus-within:text-green-500 transition-colors">
+                                <i class="fas fa-hashtag text-lg"></i>
+                            </span>
+                            {{ form.default_quantity }}
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500">Ex.: 2, 10, 22, 0,5 ou 0,1 dia</p>
+                        {% if form.default_quantity.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.default_quantity.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-stopwatch text-green-500 mr-2"></i>{{ form.unit_price.label }}
+                        </label>
+                        <input type="number" name="unit_price" id="unit_price" value="{{ form.unit_price.value|default:'' }}"
+                            class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 text-gray-800"
+                            placeholder="R$ 0,00" step="0.01" min="0" inputmode="decimal">
+                        <p class="mt-1 text-xs text-gray-500">Valor unitário do serviço (R$)</p>
+                        {% if form.unit_price.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.unit_price.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="group">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">
+                            <i class="fas fa-coins text-green-500 mr-2"></i>{{ form.estimated_price.label }}
+                        </label>
+                        <input type="number" name="estimated_price" id="estimated_price" value="{{ form.estimated_price.value|default:'' }}"
+                            class="w-full px-4 py-4 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-green-500 focus:ring-4 focus:ring-green-100 transition-all duration-300 text-gray-800"
+                            placeholder="R$ 0,00" step="0.01" min="0" inputmode="decimal">
+                        <p class="mt-1 text-xs text-gray-500">Pre?o estimado do servi?o (R$)</p>
+                        {% if form.estimated_price.errors %}
+                        <p class="mt-2 text-sm text-red-600 flex items-center"><i class="fas fa-exclamation-circle mr-1"></i>{{ form.estimated_price.errors.0 }}</p>
+                        {% endif %}
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Card: Status -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden transform hover:scale-[1.01] transition-transform duration-300">
+            <div class="bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 px-6 py-4">
+                <h3 class="text-xl font-bold text-white flex items-center">
+                    <span class="bg-white/20 rounded-lg p-2 mr-3">
+                        <i class="fas fa-toggle-on text-xl"></i>
+                    </span>
+                    Status
+                </h3>
+                <p class="text-indigo-100 text-sm mt-1 ml-12">Disponibilidade do tipo de serviço</p>
+            </div>
+
+            <div class="p-6">
+                <label class="flex items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer">
+                    <input type="checkbox" name="is_active" id="id_is_active" class="rounded border-gray-300 text-primary shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" {% if form.is_active.value %}checked{% endif %}>
+                    <span class="ml-3 text-gray-800">
+                        <span class="font-medium">{{ form.is_active.label }}</span>
+                        <span class="block text-sm text-gray-600 mt-1">Marque se o tipo de servico estiver disponível</span>
+                    </span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Botoes de Acao -->
+        <div class="bg-white rounded-2xl shadow-xl p-6">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p class="text-sm text-gray-500">
+                    <i class="fas fa-asterisk text-red-500 mr-1"></i>
+                    Campos marcados com <span class="text-red-500 font-bold">*</span> são obrigatórios
+                </p>
+                <div class="flex gap-4">
+                    <a href="{% url 'servicetype:list' %}" class="group px-8 py-4 bg-gray-100 text-gray-700 rounded-xl font-bold hover:bg-gray-200 transition-all duration-300 shadow-md hover:shadow-lg flex items-center">
+                        <i class="fas fa-times mr-2 group-hover:rotate-90 transition-transform duration-300"></i>Cancelar
+                    </a>
+                    <button type="submit" class="group px-8 py-4 bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 text-white rounded-xl font-bold hover:from-blue-600 hover:via-purple-600 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 flex items-center">
+                        <i class="fas fa-save mr-2 group-hover:scale-110 transition-transform duration-300"></i>{{ button_text }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
