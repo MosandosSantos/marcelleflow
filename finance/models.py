@@ -26,7 +26,7 @@ class Account(BaseModel):
     """
     TIPO_CHOICES = [
         ('conta_corrente', 'Conta Corrente'),
-        ('poupanca', 'Poupanca'),
+        ('poupanca', 'Poupança'),
         ('carteira', 'Carteira (Dinheiro)'),
         ('investimento', 'Investimento'),
         ('outros', 'Outros'),

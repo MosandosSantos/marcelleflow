@@ -22,7 +22,7 @@ class Migration(migrations.Migration):
                 ('created_at', models.DateTimeField(auto_now_add=True, verbose_name='Criado em')),
                 ('updated_at', models.DateTimeField(auto_now=True, verbose_name='Atualizado em')),
                 ('nome', models.CharField(max_length=100, verbose_name='Nome da Conta')),
-                ('tipo', models.CharField(choices=[('conta_corrente', 'Conta Corrente'), ('poupanca', 'Poupanca'), ('carteira', 'Carteira (Dinheiro)'), ('investimento', 'Investimento'), ('outros', 'Outros')], default='conta_corrente', max_length=20, verbose_name='Tipo de Conta')),
+                ('tipo', models.CharField(choices=[('conta_corrente', 'Conta Corrente'), ('poupanca', 'Poupança'), ('carteira', 'Carteira (Dinheiro)'), ('investimento', 'Investimento'), ('outros', 'Outros')], default='conta_corrente', max_length=20, verbose_name='Tipo de Conta')),
                 ('saldo_inicial', models.DecimalField(decimal_places=2, default=Decimal('0.00'), max_digits=15, verbose_name='Saldo Inicial')),
                 ('ativa', models.BooleanField(default=True, verbose_name='Conta Ativa')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='finance_accounts', to=settings.AUTH_USER_MODEL, verbose_name='Usuario')),
